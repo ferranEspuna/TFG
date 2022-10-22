@@ -9,7 +9,7 @@ from distances import Distance
 def run_experiment_once(activations: np.ndarray, max_dimension: int, distances: List[Distance],
                         summaries: Optional[List[Callable]] = None,
                         samples_neurons: Optional[int] = None, samples_examples: Optional[int] = None,
-                        sample_neurons_strategy: Optional[Callable[[np.ndarray, int], float]] = None,  # Sampling
+                        sample_neurons_strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = None,  # Sampling
                         vis: Optional[bool] = False, verbose: Optional[bool] = False):  # User interaction
 
     total_neurons, total_examples = activations.shape

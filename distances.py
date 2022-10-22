@@ -1,3 +1,5 @@
+import functools
+
 import numpy as np
 
 
@@ -19,6 +21,7 @@ def soft_rank_by_rows(M, alpha=None):
 
 
 def soft_spearman_distance(M, alpha=None):
+    print('spearman')
     # rank the elements of each row
     ranks = soft_rank_by_rows(M, alpha=alpha)
 

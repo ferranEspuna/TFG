@@ -39,7 +39,7 @@ M = np.random.random((num_neurons, num_examples))
 def test_all_distances():
     for dist in dists_no_param:
         print(dist)
-        D = dist(M)
+        D = dist.fun(M)
         assert (D >= 0).all()
         check_diagonal(D, tol=1e-6)
         check_triangle(D, tol=1e-6)

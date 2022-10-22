@@ -1,5 +1,5 @@
-from persim import persistent_entropy
+from persim.persistent_entropy import persistent_entropy
 
 
 def get_all_summaries():
-    return [lambda diag: persistent_entropy(diag[0])[0], lambda diag: persistent_entropy(diag[1])[0]]
+    return [lambda diagram: persistent_entropy(diagram[0])[0], lambda diagram: persistent_entropy(diagram[1])[0]]

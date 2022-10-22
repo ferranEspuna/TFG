@@ -10,8 +10,8 @@ nNeurons = 20
 nExamples = 50
 
 if __name__ == '__main__':
-    run_experiment_once(activations=data.get_data(), max_dimension=MAX_DIM_NEEDED,
-                        distances=get_all_distances_no_param(alphas, thresholds), summaries=get_all_summaries(),
-                        samples_neurons=nNeurons, samples_examples=nExamples,
-                        sample_neurons_strategy=random_indices,
-                        vis=True, verbose=False)
+    print(run_experiment_once(activations=data.get_data(), max_dimension=MAX_DIM_NEEDED,
+                              distances=get_all_distances_no_param(alphas, thresholds), summaries=get_all_summaries(),
+                              samples_neurons=nNeurons, samples_examples=nExamples,
+                              sample_neurons_strategy=random_indices,
+                              vis=True, verbose=False))

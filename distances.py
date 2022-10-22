@@ -21,7 +21,6 @@ def soft_rank_by_rows(M, alpha=None):
 
 
 def soft_spearman_distance(M, alpha=None):
-    print('spearman')
     # rank the elements of each row
     ranks = soft_rank_by_rows(M, alpha=alpha)
 
@@ -88,28 +87,30 @@ def get_all_distances_no_param(alphas, thresholds):
 
     dists_alpha_threshold = [Distance(soft_jaccard_distance_activations, 'Jaccard Distance on Activations')]
 
-    for a in alphas:
+    for d in dists_alpha:
+        for a in alphas:
 
-        for d in dists_alpha:
+            name = d.name
 
-            if a is None:
-                name = d.name
-            else:
-                name = 'Soft ' + d.name + ', alpha = ' + str(a)
+            if a is not None:
+                name = 'Soft ' + name + ', alpha = ' + str(a)
 
-            dists_no_param.append(Distance(lambda M: d.fun(M, alpha=a), name=name))
+            d2fun = functools.partial(d.fun, alpha=a)
 
+            dists_no_param.append(Distance(d2fun, name))
+
+    for d in dists_alpha_threshold:
         for t in thresholds:
-
-            for d in dists_alpha_threshold:
+            for a in alphas:
 
                 name = d.name
 
                 if a is not None:
                     name = 'Soft ' + name + ', alpha = ' + str(a)
                 if t is not None:
-                    name = d.name + ', threshold = ' + str(t)
+                    name = name + ', threshold = ' + str(t)
 
-                dists_no_param.append(Distance(lambda M: d.fun(M, alpha=a, threshold=t), name=name))
+                d2fun = functools.partial(d.fun, alpha=a, threshold=t)
+                dists_no_param.append(Distance(d2fun, name))
 
     return dists_no_param

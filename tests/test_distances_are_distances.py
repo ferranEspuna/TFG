@@ -41,6 +41,7 @@ def test_all_distances():
         print(dist)
         D = dist.fun(M)
         assert (D >= 0).all()
+        assert (D <= 1).all()
         check_diagonal(D, tol=1e-6)
         check_triangle(D, tol=1e-6)
         check_identity(D, tol=1e-6)

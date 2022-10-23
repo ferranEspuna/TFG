@@ -62,6 +62,7 @@ def run_experiments_once(activations: np.ndarray, max_dimension: int, distances:
                          vis: Optional[bool] = False,
                          name: Optional[str] = '', save: Optional[bool] = False, save_path: Optional[str] = './'
                          ) -> np.ndarray:
+
     sample_matrix = sample_all(activations, samples_examples, samples_neurons,
                                sample_neurons_strategy=sample_neurons_strategy)
 

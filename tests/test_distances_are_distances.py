@@ -1,5 +1,6 @@
 import numpy as np
 from distances import get_all_distances_no_param
+from data.data import get_data_test
 
 
 def check_identity(D, tol):
@@ -30,9 +31,7 @@ def check_triangle(D, tol):
 
 # Create test data and distances
 dists_no_param = get_all_distances_no_param(alphas=[0.1, 1, 10, 100, None], thresholds=[0, 0.1, 0.5, 0.7, 0.9, 1])
-num_neurons = 100
-num_examples = 200
-M = np.random.random((num_neurons, num_examples))
+M = get_data_test()
 
 
 # Check they are in fact distances

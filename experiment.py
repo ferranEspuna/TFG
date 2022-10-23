@@ -2,62 +2,78 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ripser import ripser
 from persim import plot_diagrams
-from typing import List, Optional, Callable
+from typing import List, Optional, Callable, Tuple
 from distances import Distance
+from sampling import sample_all
 
 
-def run_experiment_once(activations: np.ndarray, max_dimension: int, distances: List[Distance],
-                        summaries: Optional[List[Callable]] = None,
-                        samples_neurons: Optional[int] = None, samples_examples: Optional[int] = None,
-                        sample_neurons_strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = None,  # Sampling
-                        vis: Optional[bool] = False, verbose: Optional[bool] = False):  # User interaction
+# deterministic setup for an experiment
+class ExperimentResult:
 
-    total_neurons, total_examples = activations.shape
+    def __init__(self, distance_matrix: np.ndarray, diagrams: List[np.ndarray], summaries: Tuple[float]) -> None:
+        self.distance_matrix = distance_matrix
+        self.diagrams = diagrams
+        self.summaries = summaries
 
-    # The indices of the training examples we will look at
-    if samples_examples is None or samples_examples > total_examples:
-        indices_examples = np.full(total_examples, True)
+    def save(self, result_path):
+        pass
 
-    else:
-        indices_examples = np.array([True] * samples_examples + [False] * (total_examples - samples_examples))
-        np.random.shuffle(indices_examples)
 
-    sampled_examples = activations[:, indices_examples]
+class Experiment:
+    def __init__(self, sample: np.ndarray, dist: Distance, name: Optional[str], maxdim: int,
+                 summaries: Optional[Tuple[Callable[[List[np.ndarray]], float]]] = ()) -> None:
 
-    # The indices of the neurons we will look at
-    if samples_neurons is None or samples_neurons > total_neurons:
-        indices_neurons = np.full(total_neurons, True)
+        self.sample: np.ndarray = sample
+        self.dist: Distance = dist
+        self.summaries = summaries
+        self.maxdim: int = maxdim
+        self.result: Optional[ExperimentResult] = None
 
-    else:
-        if sample_neurons_strategy is None:
-            raise Exception('Number of neurons passed but no sampling strategy')
-        indices_neurons = sample_neurons_strategy(sampled_examples, samples_neurons)
+        # naming
+        if name is None:
+            self.name = dist.name
+        else:
+            self.name = name
 
-    # This is the data we will perform our persistent homology computations on
-    sample_matrix = sampled_examples[indices_neurons, :]
+    def run(self, vis: Optional[bool] = False) -> None:
 
-    if verbose:
-        print("Shape of sample matrix: ", sample_matrix.shape)
-
-    # Calculate distance matrices according to our input metrics
-    distance_matrices = [dist.fun(sample_matrix) for dist in distances]
-    distance_names = [dist.name for dist in distances]
-
-    if vis:
-        for mat, name in zip(distance_matrices, distance_names):
-            plt.imshow(mat)
-            plt.title(name)
+        # distance matrix of sample
+        D = self.dist.fun(self.sample)
+        if vis:
+            plt.imshow(D)
+            plt.title(self.dist.name)
             plt.show()
 
-    # Calculate the corresponding persistence diagrams using ripser
-    diagrams = [ripser(mat, max_dimension, thresh=1, distance_matrix=True)['dgms'] for mat in distance_matrices]
-
-    # Visualize the diagrams if specified
-    if vis:
-        for diag, name in zip(diagrams, distance_names):
-            plot_diagrams(diag)
-            plt.title(name)
+        diags = ripser(D, maxdim=self.maxdim, thresh=1, distance_matrix=True)['dgms']
+        if vis:
+            plot_diagrams(diags)
+            plt.title(self.name)
             plt.show()
 
-    # Calculate each summary for each distance and return them as a numpy 2D array
-    return np.array([[summary(diag) for summary in summaries] for diag in diagrams])
+        sums = tuple(summary(diags) for summary in self.summaries)
+
+        self.result = ExperimentResult(distance_matrix=D, diagrams=diags, summaries=sums)
+
+
+def run_experiments_once(activations: np.ndarray, max_dimension: int, distances: List[Distance],
+                         summaries: Optional[List[Callable]] = None,
+                         samples_neurons: Optional[int] = None, samples_examples: Optional[int] = None,
+                         sample_neurons_strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = None,
+                         vis: Optional[bool] = False,
+                         name: Optional[str] = '', save: Optional[bool] = False, save_path: Optional[str] = './'
+                         ) -> np.ndarray:
+    sample_matrix = sample_all(activations, samples_examples, samples_neurons,
+                               sample_neurons_strategy=sample_neurons_strategy)
+
+    experiments = [Experiment(sample_matrix, dist,
+                              name=name + ': ' + dist.name,
+                              maxdim=max_dimension, summaries=summaries
+                              )
+                   for dist in distances]
+
+    for r in experiments:
+        r.run(vis=vis)
+        if save:
+            r.result.save(save_path + '/' + r.dist.name)
+
+    return np.array([e.result.summaries for e in experiments])

@@ -1,4 +1,5 @@
 import functools
+from typing import List, Optional, Callable
 
 import numpy as np
 
@@ -38,20 +39,20 @@ def soft_spearman_distance(M, alpha=None):
 
 
 # correlation coefficient-based distance used previously
-def pearson_distance(M):
+def pearson_distance(M: np.ndarray) -> np.ndarray:
     D = np.sqrt(1 - np.corrcoef(M) ** 2)
     assert D.shape == (M.shape[0], M.shape[0])
     return D
 
 
 # regular old euclidean distance in Rn
-def euclidean_distance(M):
+def euclidean_distance(M: np.ndarray) -> np.ndarray:
     D = np.linalg.norm(M[None, :, :] - M[:, None, :], axis=2) / M.shape[1]
     assert D.shape == (M.shape[0], M.shape[0])
     return D
 
 
-def generalized_jaccard_distance(M):
+def generalized_jaccard_distance(M: np.ndarray) -> np.ndarray:
     intersections = np.sum(np.minimum(M[None, :, :], M[:, None, :]), axis=2)
     unions = np.sum(np.maximum(M[None, :, :], M[:, None, :]), axis=2)
 
@@ -63,21 +64,21 @@ def generalized_jaccard_distance(M):
     return D
 
 
-def soft_jaccard_distance_activations(M, threshold=0, alpha=None):
+def soft_jaccard_distance_activations(M: np.ndarray, threshold: float = 0, alpha: Optional[float] = None) -> np.ndarray:
     return generalized_jaccard_distance(soft_step(M - threshold, alpha=alpha))
 
 
-def soft_jaccard_distance_ranks(M, alpha=None):
+def soft_jaccard_distance_ranks(M: np.ndarray, alpha: Optional[float] = None) -> np.ndarray:
     return generalized_jaccard_distance(soft_rank_by_rows(M, alpha=alpha))
 
 
 class Distance:
-    def __init__(self, fun, name=''):
-        self.fun = fun
-        self.name = name
+    def __init__(self, fun: Callable[[np.ndarray], np.ndarray], name: str = ''):
+        self.fun: Callable[[np.ndarray], np.ndarray] = fun
+        self.name: str = name
 
 
-def get_all_distances_no_param(alphas, thresholds):
+def get_all_distances_no_param(alphas: List[float], thresholds: List[float]) -> List[Distance]:
     dists_no_param = [Distance(euclidean_distance, 'Eucliedan Distance'),
                       Distance(pearson_distance, 'Pearson Correlation Distance'),
                       Distance(generalized_jaccard_distance, 'Generalized Jaccard Distance')]

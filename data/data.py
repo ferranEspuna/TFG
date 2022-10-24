@@ -1,50 +1,51 @@
-import numpy as np
-import glob
 import os
-#import tensorflow as tf
+from typing import Generator
+
+import numpy as np
+import tensorflow_datasets as tfds
+from data.Google.GoogleDatasetReader import load_google_dataset
+from data.Google.GoogleModelReader import load_google_model
+
+FOLDER_TEMPLATE_TASK_1 = "./data/Google/public_data/input_data/task1_v4/{}"
+MAX_EXAMPLES = 200
 
 
 def get_data_test() -> np.ndarray:
-    num_neurons = 100
+    num_neurons = 200
     num_examples = 200
     M = np.random.random((num_neurons, num_examples))
     return M
 
 
-def load_google_dataset(dataset_location):
-    absolute_dataset_path = os.path.abspath(dataset_location)
-    train_dataset = _load_train_data(absolute_dataset_path)
-    test_dataset = _load_test_data(absolute_dataset_path)
-    return train_dataset, test_dataset
+def load_smol_input(x, model, num_skipped_layers_from_start=1):
+    activations = []
+    skipped_iterations = 0
+    for layer in model.layers:
+        x = layer(x)
+
+        if skipped_iterations < num_skipped_layers_from_start:
+            skipped_iterations += 1
+        else:
+            examples_x_neurons = np.reshape(np.copy(x.numpy()), newshape=(-1, x.shape[0]))
+            activations.append(examples_x_neurons)
+
+    final_array = np.concatenate(activations, axis=0)
+    return final_array
 
 
-def load_google_train_dataset(dataset_location):
-    absolute_dataset_path = os.path.abspath(dataset_location)
-    train_dataset = _load_train_data(absolute_dataset_path)
-    return train_dataset
+def get_google_examples() -> Generator[np.ndarray, None, None]:
+    dataset_location = FOLDER_TEMPLATE_TASK_1.format('dataset_1')
 
+    train_dataset, test_dataset = load_google_dataset(dataset_location)
+    npiterator = tfds.as_numpy(train_dataset.take(MAX_EXAMPLES))
+    x_train_list, y_train_list = zip(*npiterator)
 
-def _load_test_data(dataset_location):
-    return _load_data(os.path.join(dataset_location, 'test'))
+    x_train_list = list(map(lambda x_example: x_example[np.newaxis, ...], x_train_list))
+    x_train = np.concatenate(x_train_list, axis=0)
 
-
-def _load_train_data(dataset_location):
-    return _load_data(os.path.join(dataset_location, 'train'))
-
-
-def _load_data(dataset_location):
-    path_to_shards = glob.glob(os.path.join(dataset_location, 'shard_*.tfrecord'))
-    dataset = tf.data.TFRecordDataset(path_to_shards)
-    return dataset.map(_deserialize_example)
-
-
-def _deserialize_example(serialized_example):
-    record = tf.io.parse_single_example(
-        serialized_example,
-        features={
-            'inputs': tf.io.FixedLenFeature([], tf.string),
-            'output': tf.io.FixedLenFeature([], tf.string)
-        })
-    inputs = tf.io.parse_tensor(record['inputs'], out_type=tf.float32)
-    output = tf.io.parse_tensor(record['output'], out_type=tf.int32)
-    return inputs, output
+    for i in range(800):
+        dirname = 'model_' + str(i)
+        model_location = FOLDER_TEMPLATE_TASK_1.format(dirname)
+        if os.path.isdir(model_location):
+            model = load_google_model(model_location)
+            yield load_smol_input(x_train, model, num_skipped_layers_from_start=1), dirname

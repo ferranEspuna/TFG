@@ -61,7 +61,7 @@ def run_experiments_once(activations: np.ndarray, max_dimension: int, distances:
                          samples_neurons: Optional[int] = None, samples_examples: Optional[int] = None,
                          sample_neurons_strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = None,
                          vis: Optional[bool] = False,
-                         name: Optional[str] = '', save: Optional[bool] = False, save_path: Optional[str] = './'
+                         name: Optional[str] = '', save: Optional[bool] = False, save_path: Optional[str] = '../results'
                          ) -> np.ndarray:
 
     sample_matrix = sample_all(activations, samples_examples, samples_neurons,
@@ -76,6 +76,6 @@ def run_experiments_once(activations: np.ndarray, max_dimension: int, distances:
     for r in experiments:
         r.run(vis=vis)
         if save:
-            r.result.save(save_path + '/' + r.dist.name)
+            r.result.save(save_path + '/' + name + '/' + r.dist.name)
 
     return np.array([e.result.summaries for e in experiments])

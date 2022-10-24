@@ -2,6 +2,7 @@ import functools
 from typing import List, Optional, Callable
 
 import numpy as np
+from scipy.stats import spearmanr
 
 
 def soft_step(x, alpha=None):
@@ -21,6 +22,7 @@ def soft_rank_by_rows(M, alpha=None):
     return np.sum(greater, axis=1) - np.diagonal(greater, 0, 1, 2)
 
 
+# TODO con datos reales hace raíz de negativos! investigar qué pasa
 def soft_spearman_distance(M, alpha=None):
     # rank the elements of each row
     ranks = soft_rank_by_rows(M, alpha=alpha)
@@ -52,6 +54,10 @@ def euclidean_distance(M: np.ndarray) -> np.ndarray:
     return D
 
 
+def spearman_distance(M: np.ndarray) -> np.ndarray:
+    return np.sqrt(1 - spearmanr(M)[0] ** 2)
+
+
 def generalized_jaccard_distance(M: np.ndarray) -> np.ndarray:
     intersections = np.sum(np.minimum(M[None, :, :], M[:, None, :]), axis=2)
     unions = np.sum(np.maximum(M[None, :, :], M[:, None, :]), axis=2)
@@ -81,10 +87,10 @@ class Distance:
 def get_all_distances_no_param(alphas: List[float], thresholds: List[float]) -> List[Distance]:
     dists_no_param = [Distance(euclidean_distance, 'Eucliedan Distance'),
                       Distance(pearson_distance, 'Pearson Correlation Distance'),
+                      Distance(spearman_distance, 'Spearman Correlation distance'),
                       Distance(generalized_jaccard_distance, 'Generalized Jaccard Distance')]
 
-    dists_alpha = [Distance(soft_spearman_distance, 'Spearman Correlation Distance'),
-                   Distance(soft_jaccard_distance_ranks, 'Jaccard Distance on Ranks')]
+    dists_alpha = [Distance(soft_jaccard_distance_ranks, 'Jaccard Distance on Ranks')]
 
     dists_alpha_threshold = [Distance(soft_jaccard_distance_activations, 'Jaccard Distance on Activations')]
 

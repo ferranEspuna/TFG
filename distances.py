@@ -55,7 +55,7 @@ def euclidean_distance(M: np.ndarray) -> np.ndarray:
 
 
 def spearman_distance(M: np.ndarray) -> np.ndarray:
-    return np.sqrt(1 - spearmanr(M)[0] ** 2)
+    return np.sqrt(1 - spearmanr(M.T)[0] ** 2)
 
 
 def generalized_jaccard_distance(M: np.ndarray) -> np.ndarray:

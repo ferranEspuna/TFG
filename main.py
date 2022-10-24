@@ -10,8 +10,8 @@ google_example_generator = get_google_examples()
 
 alphas = [None]
 thresholds = [0]
-nNeurons = 20
-nExamples = 100
+nNeurons = 250
+nExamples = 200
 
 if __name__ == '__main__':
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
                              distances=get_all_distances_no_param(alphas, thresholds), summaries=get_all_summaries(),
                              samples_neurons=nNeurons, samples_examples=nExamples,
                              sample_neurons_strategy=largest_avg_activation_indices,
-                             vis=True, name=model_name)
+                             vis=True, name=model_name, save=True)
 
         print(tracemalloc.get_traced_memory())
 

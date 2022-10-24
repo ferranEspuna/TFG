@@ -8,7 +8,7 @@ from typing import List, Optional, Callable, Tuple
 from distances import Distance
 from sampling import sample_all
 
-FOLDER_SAVE_TEMPLATE_TASK_1 = "./results/Google/task1_v4/{}"
+SAVE_PATH = "./results/Google/task1"
 
 
 # deterministic setup for an experiment
@@ -18,14 +18,17 @@ class ExperimentResult:
         self.distance_matrix = distance_matrix
         self.diagrams = diagrams
         self.summaries = summaries
+        self.save_dir = None
 
-    # TODO
-    def save(self, result_path: str = "./results/Google/task1_v4"):
+    def get_save_dir(self, result_path="./results/Google/task1"):
+        if self.save_dir != result_path:
+            assert not os.path.isdir(result_path)
+            os.mkdir(result_path)
+            self.save_dir = result_path
 
-        assert not os.path.isdir(result_path)
-        os.mkdir(result_path)
-        plot_diagrams(self.diagrams)
-        plt.imsave(result_path + '/diagrams')
+    def save(self, result_path: str = "./results/Google/task1"):
+        self.get_save_dir(result_path)
+        pass
 
 
 class Experiment:
@@ -44,7 +47,7 @@ class Experiment:
         else:
             self.name = name
 
-    def run(self, vis: Optional[bool] = False) -> None:
+    def run(self, vis: Optional[bool] = False, save: Optional[bool] = False, save_path: Optional[str] = "./results/Google/task1") -> None:
 
         # distance matrix of sample
         D = self.dist.fun(self.sample)
@@ -54,14 +57,23 @@ class Experiment:
             plt.show()
 
         diags = ripser(D, maxdim=self.maxdim, thresh=1, distance_matrix=True)['dgms']
+        sums = tuple(summary(diags) for summary in self.summaries)
+        self.result = ExperimentResult(distance_matrix=D, diagrams=diags, summaries=sums)
+
         if vis:
             plot_diagrams(diags)
             plt.title(self.name)
+
+            if save:
+                self.result.get_save_dir(save_path)
+                plt.savefig(save_path + '/diagrams')
+
             plt.show()
 
-        sums = tuple(summary(diags) for summary in self.summaries)
 
-        self.result = ExperimentResult(distance_matrix=D, diagrams=diags, summaries=sums)
+        if save:
+            self.result.get_save_dir(save_path)
+            self.result.save(result_path=save_path)
 
 
 def run_experiments_once(activations: np.ndarray, max_dimension: int, distances: List[Distance],
@@ -69,7 +81,7 @@ def run_experiments_once(activations: np.ndarray, max_dimension: int, distances:
                          samples_neurons: Optional[int] = None, samples_examples: Optional[int] = None,
                          sample_neurons_strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = None,
                          vis: Optional[bool] = False,
-                         name: Optional[str] = '', save: Optional[bool] = False, save_path: str = '../results/Google/task1_v4'
+                         name: Optional[str] = '', save: Optional[bool] = False, save_path: str = SAVE_PATH
                          ) -> np.ndarray:
 
     sample_matrix = sample_all(activations, samples_examples, samples_neurons,
@@ -81,9 +93,12 @@ def run_experiments_once(activations: np.ndarray, max_dimension: int, distances:
                               )
                    for dist in distances]
 
-    for r in experiments:
-        r.run(vis=vis)
-        if save:
-            r.result.save(save_path + '/' + name + '/' + r.dist.name)
+    if save:
+        general_dir = save_path + '/' + name
+        assert not os.path.isdir(general_dir)
+        os.mkdir(general_dir)
+
+    for e in experiments:
+        e.run(vis=vis, save=save, save_path=save_path + '/' + name + '/' + e.dist.name)
 
     return np.array([e.result.summaries for e in experiments])

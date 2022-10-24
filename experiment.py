@@ -1,3 +1,5 @@
+import os.path
+
 import numpy as np
 import matplotlib.pyplot as plt
 from ripser import ripser
@@ -5,6 +7,8 @@ from persim import plot_diagrams
 from typing import List, Optional, Callable, Tuple
 from distances import Distance
 from sampling import sample_all
+
+FOLDER_SAVE_TEMPLATE_TASK_1 = "./results/Google/task1_v4/{}"
 
 
 # deterministic setup for an experiment
@@ -16,8 +20,12 @@ class ExperimentResult:
         self.summaries = summaries
 
     # TODO
-    def save(self, result_path):
-        pass
+    def save(self, result_path: str = "./results/Google/task1_v4"):
+
+        assert not os.path.isdir(result_path)
+        os.mkdir(result_path)
+        plot_diagrams(self.diagrams)
+        plt.imsave(result_path + '/diagrams')
 
 
 class Experiment:
@@ -61,7 +69,7 @@ def run_experiments_once(activations: np.ndarray, max_dimension: int, distances:
                          samples_neurons: Optional[int] = None, samples_examples: Optional[int] = None,
                          sample_neurons_strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = None,
                          vis: Optional[bool] = False,
-                         name: Optional[str] = '', save: Optional[bool] = False, save_path: Optional[str] = '../results'
+                         name: Optional[str] = '', save: Optional[bool] = False, save_path: str = '../results/Google/task1_v4'
                          ) -> np.ndarray:
 
     sample_matrix = sample_all(activations, samples_examples, samples_neurons,

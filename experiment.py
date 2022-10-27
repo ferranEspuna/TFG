@@ -60,19 +60,16 @@ class Experiment:
         sums = tuple(summary(diags) for summary in self.summaries)
         self.result = ExperimentResult(distance_matrix=D, diagrams=diags, summaries=sums)
 
-        if vis:
-            plot_diagrams(diags)
+        if vis or save:
+            plot_diagrams(diags, show=vis)
             plt.title(self.name)
 
-            if save:
-                self.result.get_save_dir(save_path)
-                plt.savefig(save_path + '/diagrams')
-
-            plt.show()
-
         if save:
+
             self.result.get_save_dir(save_path)
-            self.result.save(result_path=save_path)
+            plt.savefig(save_path + '/diagrams')
+
+        plt.clf()
 
 
 def run_experiments_once(activations: np.ndarray, max_dimension: int, distances: List[Distance],

@@ -58,7 +58,9 @@ def get_layer_names_from_file(location):
 
 
 # lots of tears shed here
-def calculate_all_activations_layer_by_layer(x, config_path, weights_path, num_skipped_layers_from_start=1):
+def calculate_all_activations_layer_by_layer(x, config_path, weights_path, num_skipped_layers_from_start=1,
+                                             skip_reduction_layers=False):
+
     activations = []
     layer_names_file = get_layer_names_from_file(weights_path)
 
@@ -74,9 +76,10 @@ def calculate_all_activations_layer_by_layer(x, config_path, weights_path, num_s
         layer, name = parse_layer(layer_def)
         m_layer = Sequential([layer])
         m_layer.build([0] + list(x.shape[1:]))
+        has_weights = len(layer.get_weights()) > 0
 
         # if weights need loading:
-        if len(layer.get_weights()) > 0:
+        if has_weights:
             # setting the layer name before adding to Sequential won't do!
             m_layer.layers[0]._name = layer_names_file[j]
             j += 1
@@ -84,17 +87,20 @@ def calculate_all_activations_layer_by_layer(x, config_path, weights_path, num_s
 
         # add the activations to the dataset. Maybe look into if it's worth it to do with layers with no weights???
         x = m_layer.predict_on_batch(x)
-        examples_x_neurons = np.reshape(np.copy(x), newshape=(-1, x.shape[0]))
 
         if i >= num_skipped_layers_from_start:
-            activations.append(examples_x_neurons)
+            if not skip_reduction_layers or has_weights:
+                examples_x_neurons = np.reshape(np.copy(x), newshape=(-1, x.shape[0]))
+                activations.append(examples_x_neurons)
+
         tf.keras.backend.clear_session()
 
     final_array = np.concatenate(activations, axis=0)
     return final_array
 
 
-def load_all_activations_at_once(x, config_path, weights_path, num_skipped_layers_from_start=1):
+def load_all_activations_at_once(x, config_path, weights_path, num_skipped_layers_from_start=1,
+                                 skip_reduction_layers=False):
 
     activations = []
     skipped_iterations = 0
@@ -114,15 +120,17 @@ def load_all_activations_at_once(x, config_path, weights_path, num_skipped_layer
         if skipped_iterations < num_skipped_layers_from_start:
             skipped_iterations += 1
         else:
-            examples_x_neurons = np.reshape(np.copy(x), newshape=(-1, x.shape[0]))
-            activations.append(examples_x_neurons)
+            if not skip_reduction_layers or len(layer.get_weights() > 0):
+
+                examples_x_neurons = np.reshape(np.copy(x), newshape=(-1, x.shape[0]))
+                activations.append(examples_x_neurons)
 
     final_array = np.concatenate(activations, axis=0)
 
     return final_array
 
 
-def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool = True
+def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool = True, skip_reduction: bool = True
                         ) -> Generator[np.ndarray, None, None]:
 
     # build matrix with some examples
@@ -150,9 +158,11 @@ def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool 
 
                 if layer_by_layer:
                     yield calculate_all_activations_layer_by_layer(x_train, config_path, weights_path,
-                                                                   num_skipped_layers_from_start=1), \
+                                                                   num_skipped_layers_from_start=1,
+                                                                   skip_reduction_layers=skip_reduction), \
                           dirname + '_' + str(trained)
                 else:
                     yield calculate_all_activations_layer_by_layer(x_train, config_path, weights_path,
-                                                                   num_skipped_layers_from_start=1), \
+                                                                   num_skipped_layers_from_start=1,
+                                                                   skip_reduction_layers=skip_reduction), \
                           dirname + '_' + str(trained)

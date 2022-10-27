@@ -84,7 +84,7 @@ class Distance:
         self.name: str = name
 
 
-def get_all_distances_no_param(alphas: List[float], thresholds: List[float]) -> List[Distance]:
+def get_all_distances_no_param(alphas: List[Optional[float]], thresholds: List[float]) -> List[Distance]:
     dists_no_param = [Distance(euclidean_distance, 'Eucliedan Distance'),
                       Distance(pearson_distance, 'Pearson Correlation Distance'),
                       Distance(spearman_distance, 'Spearman Correlation distance'),

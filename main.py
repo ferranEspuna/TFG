@@ -6,27 +6,29 @@ from sampling import random_indices, largest_avg_activation_indices
 import tracemalloc
 
 
-google_example_generator = get_google_examples()
-
 alphas = [None]
 thresholds = [0]
-nNeurons = 250
+nNeurons = 500
 nExamples = 200
+google_example_generator = get_google_examples(nExamples, layer_by_layer=True)
+
+SAVE_PATH = "./results/Google/task1_v5"
+
 
 if __name__ == '__main__':
 
     tracemalloc.start()
 
-    for i in range(10):
+    for i in range(50):
 
         activations_model, model_name = google_example_generator.__next__()
         print(model_name)
         run_experiments_once(activations=activations_model, max_dimension=MAX_DIM_NEEDED,
                              distances=get_all_distances_no_param(alphas, thresholds), summaries=get_all_summaries(),
-                             samples_neurons=nNeurons, samples_examples=nExamples,
-                             sample_neurons_strategy=largest_avg_activation_indices,
-                             vis=True, name=model_name, save=True)
+                             samples_neurons=nNeurons, sample_neurons_strategy=largest_avg_activation_indices,
+                             vis=True, name=model_name, save=True, save_path=SAVE_PATH)
 
-        print(tracemalloc.get_traced_memory())
+        mem = tracemalloc.get_traced_memory()
+        print("Used memory: {}".format(mem[1] - mem[0]))
 
 

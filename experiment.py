@@ -6,16 +6,16 @@ from ripser import ripser
 from persim import plot_diagrams
 from typing import List, Optional, Callable, Tuple
 from distances import Distance
-from sampling import sample_all
+from sampling import sample_neurons
 
-SAVE_PATH = "./results/Google/task1"
+SAVE_PATH_DEFAULT = "./results/Google/task1"
 
 
 # deterministic setup for an experiment
 class ExperimentResult:
 
     def __init__(self, distance_matrix: np.ndarray, diagrams: List[np.ndarray], summaries: Tuple[float]) -> None:
-        self.distance_matrix = distance_matrix
+        #self.distance_matrix = distance_matrix
         self.diagrams = diagrams
         self.summaries = summaries
         self.save_dir = None
@@ -70,7 +70,6 @@ class Experiment:
 
             plt.show()
 
-
         if save:
             self.result.get_save_dir(save_path)
             self.result.save(result_path=save_path)
@@ -81,11 +80,14 @@ def run_experiments_once(activations: np.ndarray, max_dimension: int, distances:
                          samples_neurons: Optional[int] = None, samples_examples: Optional[int] = None,
                          sample_neurons_strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = None,
                          vis: Optional[bool] = False,
-                         name: Optional[str] = '', save: Optional[bool] = False, save_path: str = SAVE_PATH
+                         name: Optional[str] = '', save: Optional[bool] = False, save_path: str = SAVE_PATH_DEFAULT
                          ) -> np.ndarray:
 
-    sample_matrix = sample_all(activations, samples_examples, samples_neurons,
-                               sample_neurons_strategy=sample_neurons_strategy)
+    if save and not os.path.isdir(save_path):
+        os.mkdir(save_path)
+
+    sample_matrix = sample_neurons(activations, samples_neurons,
+                               strategy=sample_neurons_strategy)
 
     experiments = [Experiment(sample_matrix, dist,
                               name=name + ': ' + dist.name,

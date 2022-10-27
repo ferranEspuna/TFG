@@ -27,30 +27,20 @@ def random_indices(M: np.ndarray, nSamples: int) -> np.ndarray:
     return bool_array
 
 
-def sample_all(activations: np.ndarray, samples_examples: Optional[int] = None, samples_neurons: Optional[int] = None,
-               sample_neurons_strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = random_indices
-               ) -> np.ndarray:
+def sample_neurons(activations: np.ndarray, samples_neurons: Optional[int] = None,
+                   strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = random_indices
+                   ) -> np.ndarray:
 
     total_neurons, total_examples = activations.shape
-
-    # The indices of the training examples we will look at
-    if samples_examples is None or samples_examples > total_examples:
-        indices_examples = np.full(total_examples, True)
-
-    else:
-        indices_examples = np.array([True] * samples_examples + [False] * (total_examples - samples_examples))
-        np.random.shuffle(indices_examples)
-
-    sampled_examples = activations[:, indices_examples]
 
     # The indices of the neurons we will look at
     if samples_neurons is None or samples_neurons > total_neurons:
         indices_neurons = np.full(total_neurons, True)
 
     else:
-        if sample_neurons_strategy is None:
+        if strategy is None:
             raise Exception('Number of neurons passed but no sampling strategy')
-        indices_neurons = sample_neurons_strategy(sampled_examples, samples_neurons)
+        indices_neurons = strategy(activations, samples_neurons)
 
         # This is the data we will perform our persistent homology computations on
-    return sampled_examples[indices_neurons, :]
+    return activations[indices_neurons, :]

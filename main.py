@@ -30,5 +30,3 @@ if __name__ == '__main__':
 
         mem = tracemalloc.get_traced_memory()
         print("Used memory: {}".format(mem[1] - mem[0]))
-
-

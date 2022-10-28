@@ -14,8 +14,8 @@ SAVE_PATH_DEFAULT = "./results/Google/task1"
 # deterministic setup for an experiment
 class ExperimentResult:
 
-    def __init__(self, distance_matrix: np.ndarray, diagrams: List[np.ndarray], summaries: Tuple[float]) -> None:
-        #self.distance_matrix = distance_matrix
+    def __init__(self, diagrams: List[np.ndarray], summaries: Tuple[float]) -> None:
+        # self.distance_matrix = distance_matrix
         self.diagrams = diagrams
         self.summaries = summaries
         self.save_dir = None
@@ -47,25 +47,25 @@ class Experiment:
         else:
             self.name = name
 
-    def run(self, vis: Optional[bool] = False, save: Optional[bool] = False, save_path: Optional[str] = "./results/Google/task1") -> None:
+    def run(self, vis: Optional[bool] = False, save: Optional[bool] = False,
+            save_path: Optional[str] = "./results/Google/task1") -> None:
 
         # distance matrix of sample
-        D = self.dist.fun(self.sample)
+        d = self.dist.fun(self.sample)
         if vis:
-            plt.imshow(D)
+            plt.imshow(d)
             plt.title(self.dist.name)
             plt.show()
 
-        diags = ripser(D, maxdim=self.maxdim, thresh=1, distance_matrix=True)['dgms']
+        diags = ripser(d, maxdim=self.maxdim, thresh=1, distance_matrix=True)['dgms']
         sums = tuple(summary(diags) for summary in self.summaries)
-        self.result = ExperimentResult(distance_matrix=D, diagrams=diags, summaries=sums)
+        self.result = ExperimentResult(diagrams=diags, summaries=sums)
 
         if vis or save:
             plot_diagrams(diags, show=vis)
             plt.title(self.name)
 
         if save:
-
             self.result.get_save_dir(save_path)
             plt.savefig(save_path + '/diagrams')
 
@@ -79,12 +79,11 @@ def run_experiments_once(activations: np.ndarray, max_dimension: int, distances:
                          vis: Optional[bool] = False,
                          name: Optional[str] = '', save: Optional[bool] = False, save_path: str = SAVE_PATH_DEFAULT
                          ) -> np.ndarray:
-
     if save and not os.path.isdir(save_path):
         os.mkdir(save_path)
 
     sample_matrix = sample_neurons(activations, samples_neurons,
-                               strategy=sample_neurons_strategy)
+                                   strategy=sample_neurons_strategy)
 
     experiments = [Experiment(sample_matrix, dist,
                               name=name + ': ' + dist.name,

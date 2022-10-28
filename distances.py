@@ -35,23 +35,23 @@ def soft_spearman_distance(M, alpha=None):
     rhos = 1 - k * np.sum((ranks[:, None, :] - ranks[None, :, :]) ** 2, axis=2)
 
     # correlation distance
-    D = np.sqrt(1 - rhos ** 2)
-    assert D.shape == (M.shape[0], M.shape[0])
-    return D
+    d = np.sqrt(1 - rhos ** 2)
+    assert d.shape == (M.shape[0], M.shape[0])
+    return d
 
 
 # correlation coefficient-based distance used previously
 def pearson_distance(M: np.ndarray) -> np.ndarray:
-    D = np.sqrt(1 - np.corrcoef(M) ** 2)
-    assert D.shape == (M.shape[0], M.shape[0])
-    return D
+    d = np.sqrt(1 - np.corrcoef(M) ** 2)
+    assert d.shape == (M.shape[0], M.shape[0])
+    return d
 
 
 # regular old euclidean distance in Rn
 def euclidean_distance(M: np.ndarray) -> np.ndarray:
-    D = np.linalg.norm(M[None, :, :] - M[:, None, :], axis=2) / M.shape[1]
-    assert D.shape == (M.shape[0], M.shape[0])
-    return D
+    d = np.linalg.norm(M[None, :, :] - M[:, None, :], axis=2) / M.shape[1]
+    assert d.shape == (M.shape[0], M.shape[0])
+    return d
 
 
 def spearman_distance(M: np.ndarray) -> np.ndarray:
@@ -62,12 +62,12 @@ def generalized_jaccard_distance(M: np.ndarray) -> np.ndarray:
     intersections = np.sum(np.minimum(M[None, :, :], M[:, None, :]), axis=2)
     unions = np.sum(np.maximum(M[None, :, :], M[:, None, :]), axis=2)
 
-    D = 1 - intersections / unions
+    d = 1 - intersections / unions
 
     # if they both have 0 measure we set distance to 1, which is the maximum
-    np.nan_to_num(D, nan=0.0, copy=False)
-    assert D.shape == (M.shape[0], M.shape[0])
-    return D
+    np.nan_to_num(d, nan=0.0, copy=False)
+    assert d.shape == (M.shape[0], M.shape[0])
+    return d
 
 
 def soft_jaccard_distance_activations(M: np.ndarray, threshold: float = 0, alpha: Optional[float] = None) -> np.ndarray:

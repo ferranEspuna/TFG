@@ -17,8 +17,8 @@ DEFAULT_EXAMPLES = 100
 def get_data_test() -> np.ndarray:
     num_neurons = 200
     num_examples = 200
-    M = np.random.random((num_neurons, num_examples))
-    return M
+    m = np.random.random((num_neurons, num_examples))
+    return m
 
 
 # wtf

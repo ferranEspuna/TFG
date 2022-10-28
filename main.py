@@ -1,6 +1,6 @@
 from data.data import get_google_examples
 from experiment import run_experiments_once
-from distances import get_all_distances_no_param
+from distances import get_all_distances_no_param_experiment
 from summaries import get_all_summaries, MAX_DIM_NEEDED
 from sampling import random_indices, largest_avg_activation_indices
 import tracemalloc
@@ -24,7 +24,7 @@ if __name__ == '__main__':
         activations_model, model_name = google_example_generator.__next__()
         print(model_name)
         run_experiments_once(activations=activations_model, max_dimension=MAX_DIM_NEEDED,
-                             distances=get_all_distances_no_param(alphas, thresholds), summaries=get_all_summaries(),
+                             distances=get_all_distances_no_param_experiment(alphas, thresholds), summaries=get_all_summaries(),
                              samples_neurons=nNeurons, sample_neurons_strategy=largest_avg_activation_indices,
                              vis=False,  save=True, name=model_name, save_path=SAVE_PATH)
 

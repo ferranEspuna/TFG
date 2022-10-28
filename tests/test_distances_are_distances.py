@@ -39,6 +39,7 @@ def test_all_distances():
     for dist in dists_no_param:
         print(dist)
         D = dist.fun(M)
+        assert D.shape == (M.shape[0], M.shape[0])
         assert (D >= 0).all()
         assert (D <= 1).all()
         check_diagonal(D, tol=1e-6)

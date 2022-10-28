@@ -1,7 +1,7 @@
 import json
 import os
 from collections import OrderedDict
-from typing import Generator, Tuple
+from typing import Generator, Tuple, List, Dict
 import numpy as np
 import tensorflow_datasets as tfds
 import tensorflow as tf
@@ -22,12 +22,12 @@ def get_data_test() -> np.ndarray:
 
 
 # wtf
-def cast_to_integer_if_possible(dct):
-    dct = dict(dct)
-    for k, v in dct.items():
+def cast_to_integer_if_possible(d: Dict) -> Dict:
+    d = dict(d)
+    for k, v in d.items():
         if isinstance(v, float) and v.is_integer():
-            dct[k] = int(v)
-    return dct
+            d[k] = int(v)
+    return d
 
 
 # wtf
@@ -36,31 +36,31 @@ def wrap_layer(layer_cls, *args, **kwargs) -> Tuple[Layer, str]:
     del kwargs['layer_name']
 
     class wrapped_layer(layer_cls):
-        def __call__(self, x, *args, **kwargs):
+        def __call__(self, x, *args1, **kwargs1):
             self._last_seen_input = x
-            return super(wrapped_layer, self).__call__(x, *args, **kwargs)
+            return super(wrapped_layer, self).__call__(x, *args1, **kwargs1)
 
     return wrapped_layer(*args, **kwargs), name
 
 
 # wtf
-def parse_layer(layer_def):
+def parse_layer(layer_def: Dict) -> Tuple[Layer, str]:
     layer_cls = getattr(tf.keras.layers, layer_def['layer_name'])
     kwargs = dict(layer_def)
     return wrap_layer(layer_cls, **cast_to_integer_if_possible(kwargs))
 
 
 # get all the layer names (that have weights) from hdf5 file
-def get_layer_names_from_file(location):
+def get_layer_names_from_file(location: str) -> List[str]:
     with h5py.File(location, mode='r') as f:
         keys3 = [(key, key2) for key in f for key2 in f[key]]
         return [x for key, key2 in keys3 for x in f[key][key2]]
 
 
 # lots of tears shed here
-def calculate_all_activations_layer_by_layer(x, config_path, weights_path, num_skipped_layers_from_start=1,
-                                             skip_reduction_layers=False):
-
+def calculate_all_activations_layer_by_layer(x, config_path: str, weights_path: str,
+                                             num_skipped_layers_from_start: int = 1, skip_reduction_layers: bool = False
+                                             ) -> np.ndarray:
     activations = []
     layer_names_file = get_layer_names_from_file(weights_path)
 
@@ -99,17 +99,17 @@ def calculate_all_activations_layer_by_layer(x, config_path, weights_path, num_s
     return final_array
 
 
-def load_all_activations_at_once(x, config_path, weights_path, num_skipped_layers_from_start=1,
-                                 skip_reduction_layers=False):
-
+def load_all_activations_at_once(x, config_path: str, weights_path: str,
+                                 num_skipped_layers_from_start: int = 1, skip_reduction_layers: bool = False
+                                 ) -> np.ndarray:
     activations = []
     skipped_iterations = 0
 
     with open(config_path, 'r') as f:
-        config = json.load(f)
+        model_def = json.load(f)
 
-    model = Sequential([parse_layer(l) for l in config['model_config']])
-    model.build([0] + config['input_shape'])
+    model = Sequential([parse_layer(lay)[0] for lay in model_def['model_config']])
+    model.build([0] + model_def['input_shape'])
     model.load_weights(weights_path)
 
     for layer in model.layers:
@@ -120,8 +120,7 @@ def load_all_activations_at_once(x, config_path, weights_path, num_skipped_layer
         if skipped_iterations < num_skipped_layers_from_start:
             skipped_iterations += 1
         else:
-            if not skip_reduction_layers or len(layer.get_weights() > 0):
-
+            if not skip_reduction_layers or len(layer.get_weights()) > 0:
                 examples_x_neurons = np.reshape(np.copy(x), newshape=(-1, x.shape[0]))
                 activations.append(examples_x_neurons)
 
@@ -132,7 +131,6 @@ def load_all_activations_at_once(x, config_path, weights_path, num_skipped_layer
 
 def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool = True, skip_reduction: bool = True
                         ) -> Generator[np.ndarray, None, None]:
-
     # build matrix with some examples
     dataset_location = FOLDER_TEMPLATE_TASK_1.format('dataset_1')
     train_dataset, test_dataset = load_google_dataset(dataset_location)
@@ -157,12 +155,11 @@ def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool 
                     weights_path = os.path.join(model_location, 'weights_init.hdf5')
 
                 if layer_by_layer:
-                    yield calculate_all_activations_layer_by_layer(x_train, config_path, weights_path,
-                                                                   num_skipped_layers_from_start=1,
-                                                                   skip_reduction_layers=skip_reduction), \
-                          dirname + '_' + str(trained)
+                    calculate_activations = calculate_all_activations_layer_by_layer
                 else:
-                    yield calculate_all_activations_layer_by_layer(x_train, config_path, weights_path,
-                                                                   num_skipped_layers_from_start=1,
-                                                                   skip_reduction_layers=skip_reduction), \
-                          dirname + '_' + str(trained)
+                    calculate_activations = load_all_activations_at_once
+
+                yield calculate_activations(x_train, config_path, weights_path,
+                                            num_skipped_layers_from_start=1,
+                                            skip_reduction_layers=skip_reduction
+                                            ), dirname + '_' + str(trained)

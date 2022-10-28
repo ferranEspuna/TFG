@@ -10,9 +10,9 @@ alphas = [None]
 thresholds = [0]
 nNeurons = 500
 nExamples = 200
-google_example_generator = get_google_examples(nExamples, layer_by_layer=True, skip_reduction=True)
+google_example_generator = get_google_examples(nExamples, layer_by_layer=False, skip_reduction=True)
 
-SAVE_PATH = "./results/Google/task1_v7"
+SAVE_PATH = "./results/Google/task1testing"
 
 
 if __name__ == '__main__':

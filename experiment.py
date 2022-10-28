@@ -74,7 +74,7 @@ class Experiment:
 
 def run_experiments_once(activations: np.ndarray, max_dimension: int, distances: List[Distance],
                          summaries: Optional[List[Callable]] = None,
-                         samples_neurons: Optional[int] = None, samples_examples: Optional[int] = None,
+                         samples_neurons: Optional[int] = None,
                          sample_neurons_strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = None,
                          vis: Optional[bool] = False,
                          name: Optional[str] = '', save: Optional[bool] = False, save_path: str = SAVE_PATH_DEFAULT

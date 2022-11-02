@@ -70,12 +70,19 @@ def generalized_jaccard_distance(M: np.ndarray) -> np.ndarray:
     return d
 
 
-def generalized_jaccard_distance_sum_one(M: np.ndarray) -> np.ndarray:
-    return generalized_jaccard_distance(M / M.sum(axis=1)[:, None])
+def generalized_jaccard_distance_normalized(M: np.ndarray) -> np.ndarray:
+    return generalized_jaccard_distance(M / np.max(M, axis=1)[:, None])
 
 
 def soft_jaccard_distance_activations(M: np.ndarray, threshold: float = 0, alpha: Optional[float] = None) -> np.ndarray:
     return generalized_jaccard_distance(soft_step(M - threshold, alpha=alpha))
+
+
+def generalized_jaccard_distance_normalized_activations(M: np.ndarray,
+                                                        threshold: float = 0,
+                                                        alpha: Optional[float] = None) -> np.ndarray:
+
+    return generalized_jaccard_distance(soft_step(M / np.max(M, axis=1)[:, None] - threshold, alpha=alpha))
 
 
 def soft_jaccard_distance_ranks(M: np.ndarray, alpha: Optional[float] = None) -> np.ndarray:
@@ -93,7 +100,8 @@ def get_all_distances_no_param(alphas: List[Optional[float]], thresholds: List[f
                       Distance(pearson_distance, 'Pearson Correlation Distance'),
                       Distance(spearman_distance, 'Spearman Correlation distance'),
                       Distance(generalized_jaccard_distance, 'Generalized Jaccard Distance'),
-                      Distance(generalized_jaccard_distance_sum_one, 'Generalized Jaccard Distance for Normaized activations')]
+                      Distance(generalized_jaccard_distance_normalized,
+                               'Generalized Jaccard Distance for Normaized activations')]
 
     dists_alpha = [Distance(soft_jaccard_distance_ranks, 'Jaccard Distance on Ranks')]
 
@@ -130,11 +138,12 @@ def get_all_distances_no_param(alphas: List[Optional[float]], thresholds: List[f
 
 def get_all_distances_no_param_experiment(alphas: List[Optional[float]], thresholds: List[float]) -> List[Distance]:
     dists_no_param = [Distance(euclidean_distance, 'Eucliedan Distance'),
-                      Distance(pearson_distance, 'Pearson Correlation Distance'),
-                      Distance(generalized_jaccard_distance, 'Generalized Jaccard Distance'),
-                      Distance(generalized_jaccard_distance_sum_one, 'Generalized Jaccard Distance for Normaized activations')]
+                      Distance(pearson_distance, 'Pearson Distance'),
+                      Distance(generalized_jaccard_distance, 'GJD'),
+                      Distance(generalized_jaccard_distance_normalized, 'GJD for Normaized activations')]
 
-    dists_alpha_threshold = [Distance(soft_jaccard_distance_activations, 'Jaccard Distance on Activations')]
+    dists_alpha_threshold = [Distance(soft_jaccard_distance_activations, 'GJD on Binary Activations'),
+                             Distance(generalized_jaccard_distance_normalized_activations, 'GJD on Binary Normalized Activations')]
 
     for d in dists_alpha_threshold:
         for t in thresholds:

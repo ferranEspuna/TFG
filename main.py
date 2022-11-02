@@ -6,13 +6,13 @@ from sampling import random_indices, largest_avg_activation_indices
 import tracemalloc
 
 
-alphas = [None]
-thresholds = [0]
-nNeurons = 500
-nExamples = 200
+alphas = [None, 10]
+thresholds = [0.001, 0.5, 0.8]
+nNeurons = 1000
+nExamples = 400
 google_example_generator = get_google_examples(nExamples, layer_by_layer=False, skip_reduction=True)
 
-SAVE_PATH = "./results/Google/task1testing"
+SAVE_PATH = "./results/Google/100Neurons_400Examples_v2"
 
 
 if __name__ == '__main__':

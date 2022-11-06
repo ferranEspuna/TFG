@@ -12,7 +12,7 @@ nNeurons = 1000
 nExamples = 400
 google_example_generator = get_google_examples(nExamples, layer_by_layer=False, skip_reduction=True)
 
-SAVE_PATH = "./results/Google/100Neurons_400Examples_v2"
+SAVE_PATH = "./results/Google/test2"
 
 
 if __name__ == '__main__':
@@ -26,7 +26,7 @@ if __name__ == '__main__':
         run_experiments_once(activations=activations_model, max_dimension=MAX_DIM_NEEDED,
                              distances=get_all_distances_no_param_experiment(alphas, thresholds), summaries=get_all_summaries(),
                              samples_neurons=nNeurons, sample_neurons_strategy=largest_avg_activation_indices,
-                             vis=False,  save=True, name=model_name, save_path=SAVE_PATH)
+                             save=True, name=model_name, save_path=SAVE_PATH)
 
         mem = tracemalloc.get_traced_memory()
         print("Used memory: {}".format(mem[1] - mem[0]))

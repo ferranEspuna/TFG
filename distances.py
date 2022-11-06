@@ -140,10 +140,9 @@ def get_all_distances_no_param_experiment(alphas: List[Optional[float]], thresho
     dists_no_param = [Distance(euclidean_distance, 'Eucliedan Distance'),
                       Distance(pearson_distance, 'Pearson Distance'),
                       Distance(generalized_jaccard_distance, 'GJD'),
-                      Distance(generalized_jaccard_distance_normalized, 'GJD for Normaized activations')]
+                      Distance(generalized_jaccard_distance_normalized, 'GJD on Normaized activations')]
 
-    dists_alpha_threshold = [Distance(soft_jaccard_distance_activations, 'GJD on Binary Activations'),
-                             Distance(generalized_jaccard_distance_normalized_activations, 'GJD on Binary Normalized Activations')]
+    dists_alpha_threshold = [Distance(generalized_jaccard_distance_normalized_activations, 'GJD on Binary Normalized Activations')]
 
     for d in dists_alpha_threshold:
         for t in thresholds:

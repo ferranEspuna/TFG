@@ -1,11 +1,10 @@
 import os.path
-from collections.abc import Generator
 from pickle import dump
 import numpy as np
 import matplotlib.pyplot as plt
 from ripser import ripser
 from persim import plot_diagrams
-from typing import List, Optional, Callable, Tuple
+from typing import List, Optional, Callable, Tuple, Generator
 from distances import Distance
 from sampling import sample_neurons
 from seaborn import displot

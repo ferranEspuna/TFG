@@ -30,3 +30,4 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60
 
 # Ripser++
 RUN pip install ripserplusplus
+RUN pip install seaborn

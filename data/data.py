@@ -1,6 +1,7 @@
 import json
 import os
 from collections import OrderedDict
+from collections.abc import Callable
 from typing import Generator, Tuple, List, Dict
 import numpy as np
 import tensorflow_datasets as tfds
@@ -129,15 +130,27 @@ def load_all_activations_at_once(x, config_path: str, weights_path: str,
     return final_array
 
 
+def get_x_y_as_matrix(dataset, nExamples):
+    npiterator = tfds.as_numpy(dataset.take(nExamples))
+    x_list, y_list = zip(*npiterator)
+
+    x_list = list(map(lambda x_example: x_example[np.newaxis, ...], x_list))
+    x_train = np.concatenate(x_list, axis=0)
+
+    y_list = list(map(lambda y_example: y_example[np.newaxis, ...], y_list))
+    y_train = np.concatenate(y_list, axis=0)
+
+    return x_train, y_train
+
+
 def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool = True, skip_reduction: bool = True
-                        ) -> Generator[np.ndarray, None, None]:
+                        ) -> Generator[Tuple[Callable[[], [np.ndarray]], Callable[[], [np.ndarray]], str], None, None]:
     # build matrix with some examples
     dataset_location = FOLDER_TEMPLATE_TASK_1.format('dataset_1')
     train_dataset, test_dataset = load_google_dataset(dataset_location)
-    npiterator = tfds.as_numpy(train_dataset.take(nExamples))
-    x_train_list, _ = zip(*npiterator)
-    x_train_list = list(map(lambda x_example: x_example[np.newaxis, ...], x_train_list))
-    x_train = np.concatenate(x_train_list, axis=0)
+
+    x_train, y_train = get_x_y_as_matrix(train_dataset, nExamples)
+    x_test, y_test = get_x_y_as_matrix(test_dataset, nExamples)
 
     for i in range(800):
 
@@ -147,7 +160,7 @@ def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool 
 
         if os.path.isdir(model_location):
 
-            for trained in [True, False]:
+            for trained in [True]:
 
                 if trained:
                     weights_path = os.path.join(model_location, 'weights.hdf5')
@@ -159,7 +172,11 @@ def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool 
                 else:
                     calculate_activations = load_all_activations_at_once
 
-                yield calculate_activations(x_train, config_path, weights_path,
-                                            num_skipped_layers_from_start=1,
-                                            skip_reduction_layers=skip_reduction
-                                            ), dirname + '_' + str(trained)
+                yield (lambda: calculate_activations(x_train, config_path, weights_path,
+                                                     num_skipped_layers_from_start=1,
+                                                     skip_reduction_layers=skip_reduction)), \
+                      (lambda: calculate_activations(x_test, config_path, weights_path,
+                                                     num_skipped_layers_from_start=1,
+                                                     skip_reduction_layers=skip_reduction)), \
+                      dirname + '_' + str(
+                          trained)

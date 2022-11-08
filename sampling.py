@@ -1,4 +1,4 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, Tuple
 
 import numpy as np
 
@@ -27,11 +27,11 @@ def random_indices(M: np.ndarray, nSamples: int) -> np.ndarray:
     return bool_array
 
 
-def sample_neurons(activations: np.ndarray, samples_neurons: Optional[int] = None,
+def sample_neurons(activations_train: np.ndarray, activations_test: np.ndarray, samples_neurons: Optional[int] = None,
                    strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = random_indices
-                   ) -> np.ndarray:
+                   ) -> Tuple[np.ndarray, np.ndarray]:
 
-    total_neurons, total_examples = activations.shape
+    total_neurons, total_examples = activations_train.shape
 
     # The indices of the neurons we will look at
     if samples_neurons is None or samples_neurons > total_neurons:
@@ -40,7 +40,7 @@ def sample_neurons(activations: np.ndarray, samples_neurons: Optional[int] = Non
     else:
         if strategy is None:
             raise Exception('Number of neurons passed but no sampling strategy')
-        indices_neurons = strategy(activations, samples_neurons)
+        indices_neurons = strategy(activations_train, samples_neurons)
 
         # This is the data we will perform our persistent homology computations on
-    return activations[indices_neurons, :]
+    return activations_train[indices_neurons, :], activations_test[indices_neurons, :]

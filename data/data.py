@@ -1,8 +1,7 @@
 import json
 import os
 from collections import OrderedDict
-from collections.abc import Callable
-from typing import Generator, Tuple, List, Dict
+from typing import Generator, Tuple, List, Dict, Callable
 import numpy as np
 import tensorflow_datasets as tfds
 import tensorflow as tf

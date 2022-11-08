@@ -1,0 +1,32 @@
+#Our image will start on tensorflow with GPU support
+FROM tensorflow/tensorflow:latest-gpu
+
+#We will we working on the TFG folder
+WORKDIR /home/TFG
+
+#Installing APT utils
+RUN apt install -y apt-utils
+
+# Installing NANO
+RUN apt install -y nano
+
+#Installing CMAKE
+RUN apt install -y cmake
+
+#Updating pip
+RUN pip install --upgrade pip
+
+#Installing Ripser
+RUN pip install Cython
+RUN pip install Ripser
+
+#Installing TensorFlow Datasets
+RUN pip install tensorflow-datasets
+
+#Installing gcc 7
+RUN apt install -y gcc-7 g++-7
+RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 60
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60
+
+# Ripser++
+RUN pip install ripserplusplus

@@ -143,7 +143,7 @@ def get_x_y_as_matrix(dataset, nExamples):
 
 
 def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool = True, skip_reduction: bool = True
-                        ) -> Generator[Tuple[Callable[[], [np.ndarray]], Callable[[], [np.ndarray]], str], None, None]:
+                        ) -> Generator[Tuple[Callable[[], np.ndarray], Callable[[], np.ndarray], str], None, None]:
     # build matrix with some examples
     dataset_location = FOLDER_TEMPLATE_TASK_1.format('dataset_1')
     train_dataset, test_dataset = load_google_dataset(dataset_location)

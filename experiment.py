@@ -2,14 +2,15 @@ import os.path
 from pickle import dump
 import numpy as np
 import matplotlib.pyplot as plt
-from ripser import ripser
 from persim import plot_diagrams
 from typing import List, Optional, Callable, Tuple, Generator
 from distances import Distance
 from sampling import sample_neurons
 from seaborn import displot
 from textwrap import wrap
+from adapters import ripser_plusplus, ripser_normal
 
+adapter = ripser_plusplus
 SAVE_PATH_DEFAULT = "./results/Google/task1"
 
 
@@ -31,7 +32,6 @@ class ExperimentResult:
 
     @classmethod
     def save_diag(cls, diags, name, result_path, result_string):
-
         plot_diagrams(diags, show=False)
         plt.title('Persistance Diagrams for {}. {} dataset'.format(name, result_string), wrap=True)
         plt.savefig(result_path + '/diagrams_{}'.format(result_string))
@@ -59,7 +59,6 @@ class ExperimentResult:
                 dump(diag, f)
 
     def save(self, result_path: str = "./results/Google/task1"):
-
         self.get_save_dir(result_path)
         self.save_diag(self.diagrams_train, self.name, result_path, 'Train')
         self.save_diag(self.diagrams_test, self.name, result_path, 'Test')
@@ -90,8 +89,8 @@ class Experiment:
         d_train = self.dist.fun(self.sample_train)
         d_test = self.dist.fun(self.sample_test)
 
-        diags_train = ripser(d_train, maxdim=self.maxdim, thresh=1, distance_matrix=True)['dgms']
-        diags_test = ripser(d_test, maxdim=self.maxdim, thresh=1, distance_matrix=True)['dgms']
+        diags_train = adapter(d_train, self.maxdim)
+        diags_test = adapter(d_test, self.maxdim)
         self.result = ExperimentResult(name=self.name, diagrams_train=diags_train, diagrams_test=diags_test)
 
         if save:
@@ -108,13 +107,15 @@ class Experiment:
             plt.clf()
 
 
-def run_experiments_once(activation_generator: Generator[Tuple[Callable[[], np.ndarray], Callable[[], np.ndarray], str], None, None],
-                         max_dimension: int, distances: List[Distance],
-                         summaries: Optional[List[Callable]] = None,
-                         samples_neurons: Optional[int] = None,
-                         sample_neurons_strategy: Optional[Callable[[np.ndarray, int], np.ndarray]] = None,
-                         save: Optional[bool] = False, save_path: str = SAVE_PATH_DEFAULT
-                         ) -> None:
+def run_experiments_once(
+        activation_generator: Generator[Tuple[Callable[[], np.ndarray], Callable[[], np.ndarray], str], None, None],
+        max_dimension: int, distances: List[Distance],
+        summaries: Optional[List[Callable]] = None,
+        samples_neurons: Optional[int] = None,
+        sample_neurons_strategy: Optional[Callable[[np.ndarray, np.ndarray, int], np.ndarray]] = None,
+        save: Optional[bool] = False, save_path: str = SAVE_PATH_DEFAULT
+        ) -> None:
+
     activation_callable_train, activation_callable_test, name = activation_generator.__next__()
 
     if save:

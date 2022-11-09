@@ -1,14 +1,18 @@
-import json
 import os
+import json
 from collections import OrderedDict
 from typing import Generator, Tuple, List, Dict, Callable
 import numpy as np
 import tensorflow_datasets as tfds
+import h5py
 import tensorflow as tf
 from tensorflow.python.keras import Sequential
-import h5py
 from tensorflow.python.layers.base import Layer
 from data.Google.GoogleDatasetReader import load_google_dataset
+
+import logging
+
+tf.get_logger().setLevel(logging.ERROR)
 
 FOLDER_TEMPLATE_TASK_1 = "./data/Google/public_data/input_data/task1_v4/{}"
 DEFAULT_EXAMPLES = 100
@@ -171,11 +175,16 @@ def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool 
                 else:
                     calculate_activations = load_all_activations_at_once
 
-                yield (lambda: calculate_activations(x_train, config_path, weights_path,
-                                                     num_skipped_layers_from_start=1,
-                                                     skip_reduction_layers=skip_reduction)), \
-                      (lambda: calculate_activations(x_test, config_path, weights_path,
-                                                     num_skipped_layers_from_start=1,
-                                                     skip_reduction_layers=skip_reduction)), \
-                      dirname + '_' + str(
-                          trained)
+                def calc_act_train():
+                    tf.get_logger().setLevel(logging.ERROR)
+                    return calculate_activations(x_train, config_path, weights_path,
+                                                 num_skipped_layers_from_start=1,
+                                                 skip_reduction_layers=skip_reduction)
+
+                def calc_act_test():
+                    tf.get_logger().setLevel(logging.ERROR)
+                    return calculate_activations(x_test, config_path, weights_path,
+                                                 num_skipped_layers_from_start=1,
+                                                 skip_reduction_layers=skip_reduction)
+
+                yield calc_act_train, calc_act_test, dirname + '_' + str(trained)

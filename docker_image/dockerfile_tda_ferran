@@ -1,33 +1,44 @@
 #Our image will start on tensorflow with GPU support
 FROM tensorflow/tensorflow:latest-gpu
-
-#We will we working on the TFG folder
+#We will we working on the TDL folder
 WORKDIR /home/TFG
-
+RUN add-apt-repository ppa:pypy/ppa
+#Updating packages
+RUN apt update
 #Installing APT utils
 RUN apt install -y apt-utils
-
 # Installing NANO
 RUN apt install -y nano
-
 #Installing CMAKE
 RUN apt install -y cmake
-
+# Install PyPy to optimize Python performance
+RUN apt install -y pypy3
 #Updating pip
 RUN pip install --upgrade pip
-
+#RUN pypy3 -m pip install --upgrade pip
 #Installing Ripser
 RUN pip install Cython
+#RUN pypy3 -m pip install Cython
 RUN pip install Ripser
-
+#RUN pypy3 -m pip install Ripser
 #Installing TensorFlow Datasets
 RUN pip install tensorflow-datasets
-
+#RUN pypy3 -m pip install tensorflow-datasets
+#Installing TensorFlow probability
+RUN pip install tensorflow-probability
+#RUN pypy3 -m pip install tensorflow-probability
+#Installing Giotto TDA
+RUN pip install -U giotto-tda
+#RUN pypy3 -m pip install -U giotto-tda
 #Installing gcc 7
 RUN apt install -y gcc-7 g++-7
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 60
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60
-
 # Ripser++
 RUN pip install ripserplusplus
+RUN pip install ripserplusplus
+#RUN pypy3 -m pip install ripserplusplus
+# Numba
+RUN pip install numba
+#RUN pypy3 -m pip install numba
 RUN pip install seaborn

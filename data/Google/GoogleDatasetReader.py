@@ -2,6 +2,8 @@ import glob
 import os
 
 import tensorflow as tf
+import logging
+tf.get_logger().setLevel(logging.ERROR)
 
 
 def load_google_dataset(dataset_location):

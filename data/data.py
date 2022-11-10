@@ -9,6 +9,7 @@ import tensorflow as tf
 from tensorflow.python.keras import Sequential
 from tensorflow.python.layers.base import Layer
 from data.Google.GoogleDatasetReader import load_google_dataset
+from threading import Thread
 
 import logging
 
@@ -61,6 +62,27 @@ def get_layer_names_from_file(location: str) -> List[str]:
         return [x for key, key2 in keys3 for x in f[key][key2]]
 
 
+def process_layer(d, layer_def, layer_name, weights_path):
+    import tensorflow as tf
+    # construct each layer
+    layer, name = parse_layer(layer_def)
+    try:
+        m_layer = Sequential([layer])
+    except Exception as e:
+        print(e)
+    m_layer.build([0] + list(d['x'].shape[1:]))
+    has_weights = len(layer.get_weights()) > 0
+
+    # if weights need loading:
+    if has_weights:
+        # setting the layer name before adding to Sequential won't do!
+        m_layer.layers[0]._name = layer_name  # layer_names_file[j]
+        m_layer.load_weights(weights_path, by_name=True)
+
+    # add the activations to the dataset. Maybe look into if it's worth it to do with layers with no weights???
+    d['x'] = m_layer.predict_on_batch(d['x'])
+    d['hw'] = has_weights
+
 # lots of tears shed here
 def calculate_all_activations_layer_by_layer(x, config_path: str, weights_path: str,
                                              num_skipped_layers_from_start: int = 1, skip_reduction_layers: bool = False
@@ -74,30 +96,23 @@ def calculate_all_activations_layer_by_layer(x, config_path: str, weights_path: 
     # to keep track of how many times we have loaded weights
     j = 0
 
+    d = {'x': x}
+
     for i, layer_def in enumerate(model_def['model_config']):
 
-        # construct each layer
-        layer, name = parse_layer(layer_def)
-        m_layer = Sequential([layer])
-        m_layer.build([0] + list(x.shape[1:]))
-        has_weights = len(layer.get_weights()) > 0
+        t = Thread(target=process_layer, args=(d, layer_def, layer_names_file[j], weights_path))
+        t.start()
+        t.join()
+        x = d['x']
+        has_weights = d['hw']
 
-        # if weights need loading:
         if has_weights:
-            # setting the layer name before adding to Sequential won't do!
-            m_layer.layers[0]._name = layer_names_file[j]
             j += 1
-            m_layer.load_weights(weights_path, by_name=True)
-
-        # add the activations to the dataset. Maybe look into if it's worth it to do with layers with no weights???
-        x = m_layer.predict_on_batch(x)
 
         if i >= num_skipped_layers_from_start:
             if not skip_reduction_layers or has_weights:
                 examples_x_neurons = np.reshape(np.copy(x), newshape=(-1, x.shape[0]))
                 activations.append(examples_x_neurons)
-
-        tf.keras.backend.clear_session()
 
     final_array = np.concatenate(activations, axis=0)
     return final_array

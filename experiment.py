@@ -1,4 +1,5 @@
 import os.path
+import time
 from pickle import dump
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,6 +10,7 @@ from sampling import sample_neurons
 from seaborn import displot
 from textwrap import wrap
 from adapters import ripser_plusplus, ripser_normal
+import tracemalloc
 
 adapter = ripser_plusplus
 SAVE_PATH_DEFAULT = "./results/Google/task1"
@@ -32,26 +34,35 @@ class ExperimentResult:
 
     @classmethod
     def save_diag(cls, diags, name, result_path, result_string):
-        plot_diagrams(diags, show=False)
-        plt.title('Persistance Diagrams for {}. {} dataset'.format(name, result_string), wrap=True)
-        plt.savefig(result_path + '/diagrams_{}'.format(result_string))
-        plt.close()
+
+        try:
+            plot_diagrams(diags, show=False)
+            plt.title('Persistance Diagrams for {}. {} dataset'.format(name, result_string), wrap=True)
+            plt.savefig(result_path + '/diagrams_{}'.format(result_string))
+            plt.close()
+
+        except ValueError:
+            print("Could not plot persistance diagrams")
 
         for i, diag in enumerate(diags):
 
-            if i == 0:
-                displot([point[1] for point in diag if point[1] != float('inf')], kind='kde')
-                plt.title('\n'.join(wrap('H0 death distibution for {}. {} dataset'.format(name, result_string), 60)))
-                plt.savefig(result_path + '/distribution_{}_{}'.format(i, result_string), bbox_inches="tight")
+            try:
 
-            else:
-                try:
+                if i == 0:
+                    displot([point[1] for point in diag if point[1] != float('inf')], kind='kde')
+                    plt.title(
+                        '\n'.join(wrap('H0 death distibution for {}. {} dataset'.format(name, result_string), 60)))
+                    plt.savefig(result_path + '/distribution_{}_{}'.format(i, result_string), bbox_inches="tight")
+
+                else:
+
                     births, deaths = list(zip(*diag))
                     displot(x=births, y=deaths, kind='kde', fill=True)
                     plt.title('\n'.join(wrap('H{} distribution for {}. {} dataset'.format(i, name, result_string), 60)))
                     plt.savefig(result_path + '/distribution_{}_{}'.format(i, result_string), bbox_inches="tight")
-                except ValueError:
-                    pass
+
+            except ValueError:
+                print("Could not plot H{} distribution".format(i))
 
             plt.close()
 
@@ -85,15 +96,23 @@ class Experiment:
     def run(self, save: Optional[bool] = False,
             save_path: Optional[str] = "./results/Google/task1") -> None:
 
+        t0 = time.time()
         # distance matrix of sample
         d_train = self.dist.fun(self.sample_train)
         d_test = self.dist.fun(self.sample_test)
+        t1 = time.time()
+        print('computed distances in {} seconds'.format(t1 - t0))
 
+        t0 = time.time()
         diags_train = adapter(d_train, self.maxdim)
         diags_test = adapter(d_test, self.maxdim)
         self.result = ExperimentResult(name=self.name, diagrams_train=diags_train, diagrams_test=diags_test)
+        t1 = time.time()
+        print('computed diagrams in {} seconds'.format(t1 - t0))
 
         if save:
+            t0 = time.time()
+
             self.result.save(save_path)
 
             plt.imshow(d_train)
@@ -106,6 +125,9 @@ class Experiment:
             plt.savefig(save_path + '/distances_test')
             plt.clf()
 
+            t1 = time.time()
+            print('saved data in {} seconds'.format(t1 - t0))
+
 
 def run_experiments_once(
         activation_generator: Generator[Tuple[Callable[[], np.ndarray], Callable[[], np.ndarray], str], None, None],
@@ -114,8 +136,7 @@ def run_experiments_once(
         samples_neurons: Optional[int] = None,
         sample_neurons_strategy: Optional[Callable[[np.ndarray, np.ndarray, int], np.ndarray]] = None,
         save: Optional[bool] = False, save_path: str = SAVE_PATH_DEFAULT
-        ) -> None:
-
+) -> None:
     activation_callable_train, activation_callable_test, name = activation_generator.__next__()
 
     if save:
@@ -130,15 +151,16 @@ def run_experiments_once(
     print(name)
     sample_matrix_train, sample_matrix_test = sample_neurons(activation_callable_train(), activation_callable_test(),
                                                              samples_neurons, strategy=sample_neurons_strategy)
+    mem = tracemalloc.get_traced_memory()
+    print("Using memory: {} GB".format(mem[0] * 1e-9))
 
-    experiments = [Experiment(sample_matrix_train, sample_matrix_test, dist,
-                              name=name + ': ' + dist.name,
-                              maxdim=max_dimension, summaries=summaries
-                              )
-                   for dist in distances]
+    for dist in distances:
 
-    for e in experiments:
+        e = Experiment(sample_matrix_train, sample_matrix_test, dist,
+                       name=name + ': ' + dist.name,
+                       maxdim=max_dimension, summaries=summaries)
 
+        print("\n" + e.name)
         try:
             e.run(save=save, save_path=save_path + '/' + name + '/' + e.dist.name)
         except AssertionError:

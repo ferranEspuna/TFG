@@ -43,7 +43,9 @@ def soft_spearman_distance(M, alpha=None):
 # correlation coefficient-based distance used previously
 def pearson_distance(M: np.ndarray) -> np.ndarray:
     d = np.sqrt(1 - np.corrcoef(M) ** 2)
+    np.nan_to_num(d, nan=0.0, copy=False)
     np.fill_diagonal(d, 0)
+    d = np.maximum(d, d.T)
     assert d.shape == (M.shape[0], M.shape[0])
     return d
 

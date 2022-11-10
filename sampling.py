@@ -6,7 +6,13 @@ import numpy as np
 # thanks, Ruben
 def largest_avg_activation_indices(M1: np.ndarray, M2: np.ndarray, nSamples: int) -> np.ndarray:
     # find average activation of each neuron
-    average_activations_x_neuron = np.average(np.abs(M1), axis=1) + np.average(np.abs(M2))
+    average_activations_x_neuron_1 = np.average(np.abs(M1), axis=1)
+    average_activations_x_neuron_1 /= average_activations_x_neuron_1.mean()
+    average_activations_x_neuron_2 = + np.average(np.abs(M2), axis=1)
+    average_activations_x_neuron_2 /= average_activations_x_neuron_1.mean()
+
+    average_activations_x_neuron = average_activations_x_neuron_1 + average_activations_x_neuron_2
+
     assert average_activations_x_neuron.shape[0] == M1.shape[0]
 
     # select indices of larger avg activation

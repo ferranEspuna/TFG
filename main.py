@@ -1,4 +1,6 @@
 import logging
+import tracemalloc
+
 from data.data import get_google_examples
 from experiment import run_experiments_once
 from distances import get_all_distances_no_param_experiment
@@ -10,11 +12,12 @@ alphas = [None, 10]
 thresholds = [0.001, 0.5, 0.8]
 nNeurons = 1000
 nExamples = 400
-google_example_generator = get_google_examples(nExamples, layer_by_layer=False, skip_reduction=True)
+google_example_generator = get_google_examples(nExamples, layer_by_layer=True, skip_reduction=True)
 
-SAVE_PATH = "./results/Google/test4"
+SAVE_PATH = "./results/Google/test5"
 
 if __name__ == '__main__':
+    tracemalloc.start()
 
     for i in range(200):
 

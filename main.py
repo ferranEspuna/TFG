@@ -10,11 +10,11 @@ import time
 
 alphas = [None, 10]
 thresholds = [0.001, 0.5, 0.8]
-nNeurons = 1000
-nExamples = 400
+nNeurons = 3000
+nExamples = 2000
 google_example_generator = get_google_examples(nExamples, layer_by_layer=True, skip_reduction=True)
 
-SAVE_PATH = "./results/Google/test5"
+SAVE_PATH = "./results/Google/task1"
 
 if __name__ == '__main__':
     tracemalloc.start()

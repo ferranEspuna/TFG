@@ -10,8 +10,8 @@ import time
 
 alphas = [None, 10]
 thresholds = [0.001, 0.5, 0.8]
-nNeurons = 2000
-nExamples = 1000
+nNeurons = 3000
+nExamples = 500
 google_example_generator = get_google_examples(nExamples, layer_by_layer=True, skip_reduction=True)
 
 SAVE_PATH = "./results/Google/task1"

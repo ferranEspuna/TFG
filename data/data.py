@@ -8,7 +8,7 @@ import h5py
 import tensorflow as tf
 from tensorflow.python.keras import Sequential
 from tensorflow.python.layers.base import Layer
-from GoogleDatasetReader import load_google_dataset
+from data.GoogleDatasetReader import load_google_dataset
 from threading import Thread
 
 import logging

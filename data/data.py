@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from collections import OrderedDict
 from typing import Generator, Tuple, List, Dict, Callable
 import numpy as np
@@ -174,6 +175,8 @@ def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, co
                                      num_skipped_layers_from_start: int = 1, skip_reduction_layers: bool = False
                                      ) -> Tuple[np.ndarray, np.ndarray]:
 
+    t0 = time.time()
+
     with open(config_path, 'r') as f:
         model_def = json.load(f)
 
@@ -191,7 +194,6 @@ def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, co
     sample_indices = None
 
     while start_index < total_examples:
-        print('here')
 
         activations_train_sample = []
         activations_test_sample = []
@@ -228,9 +230,14 @@ def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, co
         activations_test_all_samples.append((example_sample_test[sample_indices, :]))
 
         start_index = end_index
+        print(end_index)
 
     final_sample_train = np.concatenate(activations_train_all_samples, axis=1)
     final_sample_test = np.concatenate(activations_test_all_samples, axis=1)
+
+    t1 = time.time()
+
+    print(f'Loaded dataset in {t1 - t0} seconds')
 
     assert final_sample_train.shape == final_sample_test.shape
     return final_sample_train, final_sample_test

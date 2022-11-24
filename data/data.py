@@ -1,18 +1,16 @@
 import os
 import json
 import time
-from collections import OrderedDict
-from typing import Generator, Tuple, List, Dict, Callable
+from typing import Generator, Tuple, Dict, Callable
 import numpy as np
 import tensorflow_datasets as tfds
-import h5py
 import tensorflow as tf
 from tensorflow.python.keras import Sequential
 from tensorflow.python.layers.base import Layer
 from data.GoogleDatasetReader import load_google_dataset
-from threading import Thread
 
 FOLDER_TEMPLATE_TASK_1 = "./data/Google/public_data/input_data/task1_v4/{}"
+BATCH_SIZE = 350
 
 
 def get_data_test() -> np.ndarray:
@@ -69,7 +67,6 @@ def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, co
 
     t0 = time.time()
     total_examples = x_train.shape[0]
-    batch_size = 100
 
     activations_train_all_samples = []
     activations_test_all_samples = []
@@ -82,7 +79,7 @@ def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, co
         activations_train_sample = []
         activations_test_sample = []
 
-        end_index = min(start_index + batch_size, total_examples)
+        end_index = min(start_index + BATCH_SIZE, total_examples)
         x_train_sample = x_train[start_index: end_index]
         x_test_sample = x_test[start_index: end_index]
 

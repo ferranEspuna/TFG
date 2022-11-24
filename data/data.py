@@ -115,14 +115,14 @@ def calculate_all_activations_layer_by_layer(x_train: np.ndarray, x_test: np.nda
                 activations_train.append(train_x_neurons)
 
                 test_x_neurons = np.reshape(np.copy(x_test), newshape=(-1, x_test.shape[0]))
-                activations_train.append(test_x_neurons)
+                activations_test.append(test_x_neurons)
 
     final_array_train = np.concatenate(activations_train, axis=0)
     final_array_test = np.concatenate(activations_test, axis=0)
 
     assert final_array_train.shape == final_array_test.shape
     indices = sample_neurons_strategy(final_array_train, final_array_test, nNeurons)
-    return final_array_train[:, indices], final_array_test[:, indices]
+    return final_array_train[indices, :], final_array_test[indices, :]
 
 
 def calculate_all_activations_at_once(x_train: np.ndarray, x_test: np.ndarray, config_path: str, weights_path: str,

@@ -142,6 +142,7 @@ def get_all_distances_no_param(alphas: List[Optional[float]], thresholds: List[f
 def get_all_distances_no_param_experiment(alphas: List[Optional[float]], thresholds: List[float]) -> List[Distance]:
     dists_no_param = [Distance(euclidean_distance, 'Eucliedan Distance'),
                       Distance(pearson_distance, 'Pearson Distance'),
+                      Distance(spearman_distance, 'Spearman Distance'),
                       Distance(generalized_jaccard_distance, 'GJD'),
                       Distance(generalized_jaccard_distance_normalized, 'GJD on Normalized activations')]
 

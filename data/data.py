@@ -187,7 +187,7 @@ def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, co
     print('Loaded model in {:.2f}s'.format(t1-t0))
 
     t0 = time.time()
-    total_examples = x_train.shape[1]
+    total_examples = x_train.shape[0]
     batch_size = 100
 
     activations_train_all_samples = []
@@ -275,7 +275,7 @@ def get_google_examples(nExamples: int, nNeurons: int,
     x_test, y_test = get_x_y_as_matrix(test_dataset, nExamples)
 
     t1 = time.time()
-    print('Loaded {} examples in {:.2f}s'.format(nExamples, t1 - t0))
+    print('Loaded {} examples in {:.2f}s'.format(x_train.shape, t1 - t0))
 
     for i in range(800):
 

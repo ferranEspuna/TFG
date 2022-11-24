@@ -51,11 +51,130 @@ def parse_layer(layer_def: Dict) -> Tuple[Layer, str]:
     return wrap_layer(layer_cls, **cast_to_integer_if_possible(kwargs))
 
 
+# get all the layer names (that have weights) from hdf5 file
+def get_layer_names_from_file(location: str) -> List[str]:
+    with h5py.File(location, mode='r') as f:
+        keys3 = [(key, key2) for key in f for key2 in f[key]]
+        return [x for key, key2 in keys3 for x in f[key][key2]]
+
+
+def process_layer(d, layer_def, layer_name, weights_path):
+    import tensorflow as tf
+    # construct each layer
+    layer, name = parse_layer(layer_def)
+    m_layer = Sequential([layer])
+    m_layer.build([0] + list(d['x_train'].shape[1:]))
+    has_weights = len(layer.get_weights()) > 0
+
+    # if weights need loading:
+    if has_weights:
+        # setting the layer name before adding to Sequential won't do!
+        m_layer.layers[0]._name = layer_name  # layer_names_file[j]
+        m_layer.load_weights(weights_path, by_name=True)
+
+    d['x_train'] = m_layer.predict_on_batch(d['x_train'])
+    d['x_test'] = m_layer.predict_on_batch(d['x_test'])
+    d['hw'] = has_weights
+
+
+# lots of tears shed here
+def calculate_all_activations_layer_by_layer(x_train: np.ndarray, x_test: np.ndarray, config_path: str,
+                                             weights_path: str,
+                                             nNeurons: int,
+                                             sample_neurons_strategy: Callable[
+                                                 [np.ndarray, np.ndarray, int], np.ndarray],
+                                             num_skipped_layers_from_start: int = 1, skip_reduction_layers: bool = False
+                                             ) -> Tuple[np.ndarray, np.ndarray]:
+    activations_train = []
+    activations_test = []
+
+    layer_names_file = get_layer_names_from_file(weights_path)
+
+    with open(config_path, 'r') as f:
+        model_def = json.load(f, object_pairs_hook=OrderedDict)
+
+    # to keep track of how many times we have loaded weights
+    j = 0
+
+    d = {'x_train': x_train, 'x_test': x_test}
+
+    for i, layer_def in enumerate(model_def['model_config']):
+
+        t = Thread(target=process_layer, args=(d, layer_def, layer_names_file[j], weights_path))
+        t.start()
+        t.join()
+        x_train = d['x_train']
+        x_test = d['x_test']
+        has_weights = d['hw']
+
+        if has_weights:
+            j += 1
+
+        if i >= num_skipped_layers_from_start:
+            if not skip_reduction_layers or has_weights:
+                train_x_neurons = np.reshape(np.copy(x_train), newshape=(-1, x_train.shape[0]))
+                activations_train.append(train_x_neurons)
+
+                test_x_neurons = np.reshape(np.copy(x_test), newshape=(-1, x_test.shape[0]))
+                activations_test.append(test_x_neurons)
+
+    final_array_train = np.concatenate(activations_train, axis=0)
+    final_array_test = np.concatenate(activations_test, axis=0)
+
+    assert final_array_train.shape == final_array_test.shape
+    indices = sample_neurons_strategy(final_array_train, final_array_test, nNeurons)
+    return final_array_train[indices, :], final_array_test[indices, :]
+
+
+def calculate_all_activations_at_once(x_train: np.ndarray, x_test: np.ndarray, config_path: str, weights_path: str,
+                                      nNeurons: int,
+                                      sample_neurons_strategy: Callable[[np.ndarray, np.ndarray, int], np.ndarray],
+                                      num_skipped_layers_from_start: int = 1, skip_reduction_layers: bool = False
+                                      ) -> Tuple[np.ndarray, np.ndarray]:
+    activations_train = []
+    activations_test = []
+
+    skipped_iterations = 0
+
+    with open(config_path, 'r') as f:
+        model_def = json.load(f)
+
+    model = Sequential([parse_layer(lay)[0] for lay in model_def['model_config']])
+    model.build([0] + model_def['input_shape'])
+    model.load_weights(weights_path)
+
+    for layer in model.layers:
+
+        m_layer = tf.keras.Sequential([layer])
+        x_train = m_layer.predict_on_batch(x_train)
+        x_test = m_layer.predict_on_batch(x_test)
+
+        if skipped_iterations < num_skipped_layers_from_start:
+            skipped_iterations += 1
+        else:
+            if not skip_reduction_layers or len(layer.get_weights()) > 0:
+                train_x_neurons = np.reshape(np.copy(x_train), newshape=(-1, x_train.shape[0]))
+                activations_train.append(train_x_neurons)
+                print(len(activations_train))
+
+                test_x_neurons = np.reshape(np.copy(x_test), newshape=(-1, x_test.shape[0]))
+                activations_test.append(test_x_neurons)
+                print(len(activations_test))
+
+    final_array_train = np.concatenate(activations_train, axis=0)
+    final_array_test = np.concatenate(activations_test, axis=0)
+
+    assert final_array_train.shape == final_array_test.shape
+    indices = sample_neurons_strategy(final_array_train, final_array_test, nNeurons)
+    return final_array_train[:, indices], final_array_test[:, indices]
+
+
 def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, config_path: str, weights_path: str,
                                      nNeurons: int,
                                      sample_neurons_strategy: Callable[[np.ndarray, np.ndarray, int], np.ndarray],
                                      num_skipped_layers_from_start: int = 1, skip_reduction_layers: bool = False
                                      ) -> Tuple[np.ndarray, np.ndarray]:
+
     t0 = time.time()
 
     with open(config_path, 'r') as f:
@@ -65,7 +184,7 @@ def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, co
     model.build([0] + model_def['input_shape'])
     model.load_weights(weights_path)
     t1 = time.time()
-    print('Loaded model in {:.2f}s'.format(t1 - t0))
+    print('Loaded model in {:.2f}s'.format(t1-t0))
 
     t0 = time.time()
     total_examples = x_train.shape[0]
@@ -121,7 +240,7 @@ def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, co
 
     t1 = time.time()
 
-    print('Calculated activations in {:.2f}s'.format(t1 - t0))
+    print('Calculated activations in {:.2f}s'.format(t1-t0))
 
     assert final_sample_train.shape == final_sample_test.shape
     return final_sample_train, final_sample_test
@@ -141,9 +260,11 @@ def get_x_y_as_matrix(dataset, nExamples):
 
 
 def get_google_examples(nExamples: int, nNeurons: int,
+                        calculate_activations,
                         sample_neurons_strategy: Callable[[np.ndarray, np.ndarray, int], np.ndarray],
                         skip_reduction: bool = True
                         ) -> Generator[Tuple[Callable[[], Tuple[np.ndarray, np.ndarray]], str], None, None]:
+
     t0 = time.time()
 
     # build matrix with some examples
@@ -172,10 +293,9 @@ def get_google_examples(nExamples: int, nNeurons: int,
                     weights_path = os.path.join(model_location, 'weights_init.hdf5')
 
                 def calc_acts():
-                    return calculate_activations_by_batches(x_train, x_test, config_path, weights_path,
-                                                            nNeurons=nNeurons,
-                                                            sample_neurons_strategy=sample_neurons_strategy,
-                                                            num_skipped_layers_from_start=1,
-                                                            skip_reduction_layers=skip_reduction)
+                    return calculate_activations(x_train, x_test, config_path, weights_path,
+                                                 nNeurons=nNeurons, sample_neurons_strategy=sample_neurons_strategy,
+                                                 num_skipped_layers_from_start=1,
+                                                 skip_reduction_layers=skip_reduction)
 
                 yield calc_acts, dirname + '_' + str(trained)

@@ -188,7 +188,7 @@ def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, co
 
     t0 = time.time()
     total_examples = x_train.shape[1]
-    batch_size = 10
+    batch_size = 100
 
     activations_train_all_samples = []
     activations_test_all_samples = []

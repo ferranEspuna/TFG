@@ -6,13 +6,17 @@ from experiment import run_experiments_once
 from distances import get_all_distances_no_param_experiment
 from summaries import get_all_summaries, MAX_DIM_NEEDED
 from sampling import random_indices, largest_avg_activation_indices
+from data.data import calculate_all_activations_layer_by_layer
 import time
 
 alphas = [None, 10]
 thresholds = [0.001, 0.5, 0.8]
 nNeurons = 2000
 nExamples = 32
-google_example_generator = get_google_examples(nExamples, layer_by_layer=True, skip_reduction=True)
+google_example_generator = get_google_examples(nExamples, nNeurons,
+                                               calculate_activations=calculate_all_activations_layer_by_layer,
+                                               sample_neurons_strategy=largest_avg_activation_indices,
+                                               skip_reduction=True)
 
 SAVE_PATH = "./results/Google/task1"
 
@@ -26,7 +30,6 @@ if __name__ == '__main__':
             run_experiments_once(activation_generator=google_example_generator, max_dimension=MAX_DIM_NEEDED,
                                  distances=get_all_distances_no_param_experiment(alphas, thresholds),
                                  summaries=get_all_summaries(),
-                                 samples_neurons=nNeurons, sample_neurons_strategy=largest_avg_activation_indices,
                                  save=True, save_path=SAVE_PATH)
             t1 = time.time()
             print(t1 - t0)

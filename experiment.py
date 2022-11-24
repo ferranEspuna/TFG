@@ -6,11 +6,9 @@ import matplotlib.pyplot as plt
 from persim import plot_diagrams
 from typing import List, Optional, Callable, Tuple, Generator
 from distances import Distance
-from sampling import sample_neurons
 from seaborn import displot
 from textwrap import wrap
 from adapters import ripser_plusplus, ripser_normal
-import tracemalloc
 
 adapter = ripser_plusplus
 SAVE_PATH_DEFAULT = "./results/Google/task1"
@@ -130,14 +128,12 @@ class Experiment:
 
 
 def run_experiments_once(
-        activation_generator: Generator[Tuple[Callable[[], np.ndarray], Callable[[], np.ndarray], str], None, None],
+        activation_generator: Generator[Tuple[Callable[[], Tuple[np.ndarray, np.ndarray]], str], None, None],
         max_dimension: int, distances: List[Distance],
         summaries: Optional[List[Callable]] = None,
-        samples_neurons: Optional[int] = None,
-        sample_neurons_strategy: Optional[Callable[[np.ndarray, np.ndarray, int], np.ndarray]] = None,
         save: Optional[bool] = False, save_path: str = SAVE_PATH_DEFAULT
 ) -> None:
-    activation_callable_train, activation_callable_test, name = activation_generator.__next__()
+    activation_callable, name = activation_generator.__next__()
 
     if save:
 
@@ -149,11 +145,7 @@ def run_experiments_once(
         os.mkdir(general_dir)
 
     print(name)
-    sample_matrix_train, sample_matrix_test = sample_neurons(activation_callable_train(), activation_callable_test(),
-                                                             samples_neurons, strategy=sample_neurons_strategy)
-    mem = tracemalloc.get_traced_memory()
-    print("Using memory: {} GB".format(mem[0] * 1e-9))
-
+    sample_matrix_train, sample_matrix_test = activation_callable()
     for dist in distances:
 
         e = Experiment(sample_matrix_train, sample_matrix_test, dist,

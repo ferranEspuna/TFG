@@ -16,7 +16,6 @@ import logging
 tf.get_logger().setLevel(logging.ERROR)
 
 FOLDER_TEMPLATE_TASK_1 = "./data/Google/public_data/input_data/task1_v4/{}"
-DEFAULT_EXAMPLES = 100
 
 
 def get_data_test() -> np.ndarray:
@@ -66,10 +65,7 @@ def process_layer(d, layer_def, layer_name, weights_path):
     import tensorflow as tf
     # construct each layer
     layer, name = parse_layer(layer_def)
-    try:
-        m_layer = Sequential([layer])
-    except Exception as e:
-        print(e)
+    m_layer = Sequential([layer])
     m_layer.build([0] + list(d['x'].shape[1:]))
     has_weights = len(layer.get_weights()) > 0
 
@@ -79,15 +75,22 @@ def process_layer(d, layer_def, layer_name, weights_path):
         m_layer.layers[0]._name = layer_name  # layer_names_file[j]
         m_layer.load_weights(weights_path, by_name=True)
 
-    # add the activations to the dataset. Maybe look into if it's worth it to do with layers with no weights???
-    d['x'] = m_layer.predict_on_batch(d['x'])
+    d['x_train'] = m_layer.predict_on_batch(d['x_train'])
+    d['x_test'] = m_layer.predict_on_batch(d['x_test'])
     d['hw'] = has_weights
 
+
 # lots of tears shed here
-def calculate_all_activations_layer_by_layer(x, config_path: str, weights_path: str,
+def calculate_all_activations_layer_by_layer(x_train: np.ndarray, x_test: np.ndarray, config_path: str,
+                                             weights_path: str,
+                                             nNeurons: int,
+                                             sample_neurons_strategy: Callable[
+                                                 [np.ndarray, np.ndarray, int], np.ndarray],
                                              num_skipped_layers_from_start: int = 1, skip_reduction_layers: bool = False
-                                             ) -> np.ndarray:
-    activations = []
+                                             ) -> Tuple[np.ndarray, np.ndarray]:
+    activations_train = []
+    activations_test = []
+
     layer_names_file = get_layer_names_from_file(weights_path)
 
     with open(config_path, 'r') as f:
@@ -96,14 +99,15 @@ def calculate_all_activations_layer_by_layer(x, config_path: str, weights_path: 
     # to keep track of how many times we have loaded weights
     j = 0
 
-    d = {'x': x}
+    d = {'x_train': x_train, 'x_test': x_test}
 
     for i, layer_def in enumerate(model_def['model_config']):
 
         t = Thread(target=process_layer, args=(d, layer_def, layer_names_file[j], weights_path))
         t.start()
         t.join()
-        x = d['x']
+        x_train = d['x_train']
+        x_test = d['x_test']
         has_weights = d['hw']
 
         if has_weights:
@@ -111,17 +115,28 @@ def calculate_all_activations_layer_by_layer(x, config_path: str, weights_path: 
 
         if i >= num_skipped_layers_from_start:
             if not skip_reduction_layers or has_weights:
-                examples_x_neurons = np.reshape(np.copy(x), newshape=(-1, x.shape[0]))
-                activations.append(examples_x_neurons)
+                train_x_neurons = np.reshape(np.copy(x_train), newshape=(-1, x_train.shape[0]))
+                activations_train.append(train_x_neurons)
 
-    final_array = np.concatenate(activations, axis=0)
-    return final_array
+                test_x_neurons = np.reshape(np.copy(x_test), newshape=(-1, x_test.shape[0]))
+                activations_train.append(test_x_neurons)
+
+    final_array_train = np.concatenate(activations_train, axis=0)
+    final_array_test = np.concatenate(activations_test, axis=0)
+
+    assert final_array_train.shape == final_array_test.shape
+    indices = sample_neurons_strategy(final_array_train, final_array_test, nNeurons)
+    return final_array_train[:, indices], final_array_test[:, indices]
 
 
-def load_all_activations_at_once(x, config_path: str, weights_path: str,
-                                 num_skipped_layers_from_start: int = 1, skip_reduction_layers: bool = False
-                                 ) -> np.ndarray:
-    activations = []
+def calculate_all_activations_at_once(x_train: np.ndarray, x_test: np.ndarray, config_path: str, weights_path: str,
+                                      nNeurons: int,
+                                      sample_neurons_strategy: Callable[[np.ndarray, np.ndarray, int], np.ndarray],
+                                      num_skipped_layers_from_start: int = 1, skip_reduction_layers: bool = False
+                                      ) -> Tuple[np.ndarray, np.ndarray]:
+    activations_train = []
+    activations_test = []
+
     skipped_iterations = 0
 
     with open(config_path, 'r') as f:
@@ -134,18 +149,25 @@ def load_all_activations_at_once(x, config_path: str, weights_path: str,
     for layer in model.layers:
 
         m_layer = tf.keras.Sequential([layer])
-        x = m_layer.predict_on_batch(x)
+        x_train = m_layer.predict_on_batch(x_train)
+        x_test = m_layer.predict_on_batch(x_test)
 
         if skipped_iterations < num_skipped_layers_from_start:
             skipped_iterations += 1
         else:
             if not skip_reduction_layers or len(layer.get_weights()) > 0:
-                examples_x_neurons = np.reshape(np.copy(x), newshape=(-1, x.shape[0]))
-                activations.append(examples_x_neurons)
+                train_x_neurons = np.reshape(np.copy(x_train), newshape=(-1, x_train.shape[0]))
+                activations_train.append(train_x_neurons)
 
-    final_array = np.concatenate(activations, axis=0)
+                test_x_neurons = np.reshape(np.copy(x_test), newshape=(-1, x_test.shape[0]))
+                activations_test.append(test_x_neurons)
 
-    return final_array
+    final_array_train = np.concatenate(activations_train, axis=0)
+    final_array_test = np.concatenate(activations_test, axis=0)
+
+    assert final_array_train.shape == final_array_test.shape
+    indices = sample_neurons_strategy(final_array_train, final_array_test, nNeurons)
+    return final_array_train[:, indices], final_array_test[:, indices]
 
 
 def get_x_y_as_matrix(dataset, nExamples):
@@ -161,8 +183,11 @@ def get_x_y_as_matrix(dataset, nExamples):
     return x_train, y_train
 
 
-def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool = True, skip_reduction: bool = True
-                        ) -> Generator[Tuple[Callable[[], np.ndarray], Callable[[], np.ndarray], str], None, None]:
+def get_google_examples(nExamples: int, nNeurons: int,
+                        calculate_activations,
+                        sample_neurons_strategy: Callable[[np.ndarray, np.ndarray, int], np.ndarray],
+                        skip_reduction: bool = True
+                        ) -> Generator[Tuple[Callable[[], Tuple[np.ndarray, np.ndarray]], str], None, None]:
     # build matrix with some examples
     dataset_location = FOLDER_TEMPLATE_TASK_1.format('dataset_1')
     train_dataset, test_dataset = load_google_dataset(dataset_location)
@@ -185,21 +210,11 @@ def get_google_examples(nExamples: int = DEFAULT_EXAMPLES, layer_by_layer: bool 
                 else:
                     weights_path = os.path.join(model_location, 'weights_init.hdf5')
 
-                if layer_by_layer:
-                    calculate_activations = calculate_all_activations_layer_by_layer
-                else:
-                    calculate_activations = load_all_activations_at_once
-
-                def calc_act_train():
+                def calc_acts():
                     tf.get_logger().setLevel(logging.ERROR)
-                    return calculate_activations(x_train, config_path, weights_path,
+                    return calculate_activations(x_train, x_test, config_path, weights_path,
+                                                 nNeurons=nNeurons, sample_neurons_strategy=sample_neurons_strategy,
                                                  num_skipped_layers_from_start=1,
                                                  skip_reduction_layers=skip_reduction)
 
-                def calc_act_test():
-                    tf.get_logger().setLevel(logging.ERROR)
-                    return calculate_activations(x_test, config_path, weights_path,
-                                                 num_skipped_layers_from_start=1,
-                                                 skip_reduction_layers=skip_reduction)
-
-                yield calc_act_train, calc_act_test, dirname + '_' + str(trained)
+                yield calc_acts, dirname + '_' + str(trained)

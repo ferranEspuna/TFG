@@ -275,7 +275,7 @@ def get_google_examples(nExamples: int, nNeurons: int,
     x_test, y_test = get_x_y_as_matrix(test_dataset, nExamples)
 
     t1 = time.time()
-    print('Loaded dataset in {:.2f}s'.format(t1 - t0))
+    print('Loaded {} examples in {:.2f}s'.format(nExamples, t1 - t0))
 
     for i in range(800):
 

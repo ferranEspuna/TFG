@@ -10,7 +10,7 @@ from tensorflow.python.layers.base import Layer
 from data.GoogleDatasetReader import load_google_dataset
 
 FOLDER_TEMPLATE_TASK_1 = "./data/Google/public_data/input_data/task1_v4/{}"
-BATCH_SIZE = 350
+BATCH_SIZE = 500
 
 
 def get_data_test() -> np.ndarray:

@@ -183,7 +183,10 @@ def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, co
     model = Sequential([parse_layer(lay)[0] for lay in model_def['model_config']])
     model.build([0] + model_def['input_shape'])
     model.load_weights(weights_path)
+    t1 = time.time()
+    print('Loaded model in {:.2f}s'.format(t1-t0))
 
+    t0 = time.time()
     total_examples = x_train.shape[1]
     batch_size = 10
 
@@ -230,14 +233,14 @@ def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, co
         activations_test_all_samples.append((example_sample_test[sample_indices, :]))
 
         start_index = end_index
-        print(end_index)
+        print(f'Calculated activations for {end_index} / {total_examples} examples')
 
     final_sample_train = np.concatenate(activations_train_all_samples, axis=1)
     final_sample_test = np.concatenate(activations_test_all_samples, axis=1)
 
     t1 = time.time()
 
-    print(f'Loaded dataset in {t1 - t0} seconds')
+    print('Calculated activations in {:.2f}s'.format(t1-t0))
 
     assert final_sample_train.shape == final_sample_test.shape
     return final_sample_train, final_sample_test
@@ -261,12 +264,18 @@ def get_google_examples(nExamples: int, nNeurons: int,
                         sample_neurons_strategy: Callable[[np.ndarray, np.ndarray, int], np.ndarray],
                         skip_reduction: bool = True
                         ) -> Generator[Tuple[Callable[[], Tuple[np.ndarray, np.ndarray]], str], None, None]:
+
+    t0 = time.time()
+
     # build matrix with some examples
     dataset_location = FOLDER_TEMPLATE_TASK_1.format('dataset_1')
     train_dataset, test_dataset = load_google_dataset(dataset_location)
 
     x_train, y_train = get_x_y_as_matrix(train_dataset, nExamples)
     x_test, y_test = get_x_y_as_matrix(test_dataset, nExamples)
+
+    t1 = time.time()
+    print('Loaded dataset in {:.2f}s'.format(t1 - t0))
 
     for i in range(800):
 

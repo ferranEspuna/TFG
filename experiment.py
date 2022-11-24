@@ -99,14 +99,14 @@ class Experiment:
         d_train = self.dist.fun(self.sample_train)
         d_test = self.dist.fun(self.sample_test)
         t1 = time.time()
-        print('computed distances in {} seconds'.format(t1 - t0))
+        print('computed distances in {:.2f}s'.format(t1 - t0))
 
         t0 = time.time()
         diags_train = adapter(d_train, self.maxdim)
         diags_test = adapter(d_test, self.maxdim)
         self.result = ExperimentResult(name=self.name, diagrams_train=diags_train, diagrams_test=diags_test)
         t1 = time.time()
-        print('computed diagrams in {} seconds'.format(t1 - t0))
+        print('computed diagrams in {:.2f}s'.format(t1 - t0))
 
         if save:
             t0 = time.time()
@@ -124,7 +124,7 @@ class Experiment:
             plt.clf()
 
             t1 = time.time()
-            print('saved data in {} seconds'.format(t1 - t0))
+            print('saved data in {:.2f}s'.format(t1 - t0))
 
 
 def run_experiments_once(

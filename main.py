@@ -4,8 +4,8 @@ from data.data import get_google_examples
 from experiment import run_experiments_once
 from distances import get_all_distances_no_param_experiment
 from summaries import get_all_summaries, MAX_DIM_NEEDED
-from sampling import random_indices, largest_avg_activation_indices
-from data.data import calculate_all_activations_layer_by_layer, calculate_activations_by_batches
+from sampling import largest_avg_activation_indices
+from data.data import calculate_activations_by_batches
 import time
 
 alphas = [None, 10]

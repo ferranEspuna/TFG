@@ -66,7 +66,7 @@ def process_layer(d, layer_def, layer_name, weights_path):
     # construct each layer
     layer, name = parse_layer(layer_def)
     m_layer = Sequential([layer])
-    m_layer.build([0] + list(d['x'].shape[1:]))
+    m_layer.build([0] + list(d['x_train'].shape[1:]))
     has_weights = len(layer.get_weights()) > 0
 
     # if weights need loading:

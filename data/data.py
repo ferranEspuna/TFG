@@ -156,11 +156,14 @@ def calculate_all_activations_at_once(x_train: np.ndarray, x_test: np.ndarray, c
             skipped_iterations += 1
         else:
             if not skip_reduction_layers or len(layer.get_weights()) > 0:
+
                 train_x_neurons = np.reshape(np.copy(x_train), newshape=(-1, x_train.shape[0]))
                 activations_train.append(train_x_neurons)
+                print(len(activations_train))
 
                 test_x_neurons = np.reshape(np.copy(x_test), newshape=(-1, x_test.shape[0]))
                 activations_test.append(test_x_neurons)
+                print(len(activations_test))
 
     final_array_train = np.concatenate(activations_train, axis=0)
     final_array_test = np.concatenate(activations_test, axis=0)

@@ -1,4 +1,3 @@
-import logging
 import tracemalloc
 
 from data.data import get_google_examples

@@ -11,10 +11,6 @@ from tensorflow.python.layers.base import Layer
 from data.GoogleDatasetReader import load_google_dataset
 from threading import Thread
 
-import logging
-
-tf.get_logger().setLevel(logging.ERROR)
-
 FOLDER_TEMPLATE_TASK_1 = "./data/Google/public_data/input_data/task1_v4/{}"
 
 
@@ -214,7 +210,6 @@ def get_google_examples(nExamples: int, nNeurons: int,
                     weights_path = os.path.join(model_location, 'weights_init.hdf5')
 
                 def calc_acts():
-                    tf.get_logger().setLevel(logging.ERROR)
                     return calculate_activations(x_train, x_test, config_path, weights_path,
                                                  nNeurons=nNeurons, sample_neurons_strategy=sample_neurons_strategy,
                                                  num_skipped_layers_from_start=1,

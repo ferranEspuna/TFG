@@ -152,7 +152,6 @@ def calculate_all_activations_at_once(x_train: np.ndarray, x_test: np.ndarray, c
             skipped_iterations += 1
         else:
             if not skip_reduction_layers or len(layer.get_weights()) > 0:
-
                 train_x_neurons = np.reshape(np.copy(x_train), newshape=(-1, x_train.shape[0]))
                 activations_train.append(train_x_neurons)
                 print(len(activations_train))
@@ -167,6 +166,74 @@ def calculate_all_activations_at_once(x_train: np.ndarray, x_test: np.ndarray, c
     assert final_array_train.shape == final_array_test.shape
     indices = sample_neurons_strategy(final_array_train, final_array_test, nNeurons)
     return final_array_train[:, indices], final_array_test[:, indices]
+
+
+def calculate_activations_by_batches(x_train: np.ndarray, x_test: np.ndarray, config_path: str, weights_path: str,
+                                     nNeurons: int,
+                                     sample_neurons_strategy: Callable[[np.ndarray, np.ndarray, int], np.ndarray],
+                                     num_skipped_layers_from_start: int = 1, skip_reduction_layers: bool = False
+                                     ) -> Tuple[np.ndarray, np.ndarray]:
+
+    with open(config_path, 'r') as f:
+        model_def = json.load(f)
+
+    model = Sequential([parse_layer(lay)[0] for lay in model_def['model_config']])
+    model.build([0] + model_def['input_shape'])
+    model.load_weights(weights_path)
+
+    total_examples = x_train.shape[1]
+    batch_size = 10
+
+    activations_train_all_samples = []
+    activations_test_all_samples = []
+
+    start_index = 0
+    sample_indices = None
+
+    while start_index < total_examples:
+        print('here')
+
+        activations_train_sample = []
+        activations_test_sample = []
+
+        end_index = min(start_index + batch_size, total_examples)
+        x_train_sample = x_train[start_index: end_index]
+        x_test_sample = x_test[start_index: end_index]
+
+        skipped_iterations = 0
+
+        for layer in model.layers:
+
+            m_layer = tf.keras.Sequential([layer])
+            x_train_sample = m_layer.predict_on_batch(x_train_sample)
+            x_test_sample = m_layer.predict_on_batch(x_test_sample)
+
+            if skipped_iterations < num_skipped_layers_from_start:
+                skipped_iterations += 1
+            else:
+                if not skip_reduction_layers or len(layer.get_weights()) > 0:
+                    train_x_neurons_sample = np.reshape(np.copy(x_train_sample), newshape=(-1, x_train_sample.shape[0]))
+                    activations_train_sample.append(train_x_neurons_sample)
+
+                    test_x_neurons_sample = np.reshape(np.copy(x_test_sample), newshape=(-1, x_test_sample.shape[0]))
+                    activations_test_sample.append(test_x_neurons_sample)
+
+        example_sample_train = np.concatenate(activations_train_sample, axis=0)
+        example_sample_test = np.concatenate(activations_test_sample, axis=0)
+
+        if sample_indices is None:
+            sample_indices = sample_neurons_strategy(example_sample_train, example_sample_test, nNeurons)
+
+        activations_train_all_samples.append((example_sample_train[sample_indices, :]))
+        activations_test_all_samples.append((example_sample_test[sample_indices, :]))
+
+        start_index = end_index
+
+    final_sample_train = np.concatenate(activations_train_all_samples, axis=1)
+    final_sample_test = np.concatenate(activations_test_all_samples, axis=1)
+
+    assert final_sample_train.shape == final_sample_test.shape
+    return final_sample_train, final_sample_test
 
 
 def get_x_y_as_matrix(dataset, nExamples):

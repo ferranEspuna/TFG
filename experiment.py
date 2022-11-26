@@ -133,9 +133,7 @@ def run_experiments_once(
         summaries: Optional[List[Callable]] = None,
         save: Optional[bool] = False, save_path: str = SAVE_PATH_DEFAULT
 ) -> None:
-    print('no he hecho nada')
     activation_callable, name = activation_generator.__next__()
-    print('tengo callable de activaciones')
     if save:
 
         if not os.path.isdir(save_path):
@@ -144,9 +142,6 @@ def run_experiments_once(
         general_dir = save_path + '/' + name
         assert not os.path.isdir(general_dir)
         os.mkdir(general_dir)
-
-    print('tengo el directorio')
-
 
     print(name)
     sample_matrix_train, sample_matrix_test = activation_callable()

@@ -29,8 +29,8 @@ def _load_train_data(dataset_location):
 
 
 def _load_data(dataset_location):
-    #path_to_shards = glob.glob(os.path.join(dataset_location, 'shard_*.tfrecord'))
-    dataset_iterator = tfpyio.tf_record_iterator(dataset_location)
+    path_to_shards = glob.glob(os.path.join(dataset_location, 'shard_*.tfrecord'))
+    dataset_iterator = tfpyio.tf_record_iterator(path_to_shards[0])
     return [_deserialize_example(ex) for _, ex in zip(range(100), dataset_iterator)]
 
 def _deserialize_example(serialized_example):

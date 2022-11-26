@@ -1,7 +1,7 @@
 import glob
 import os
-
 import tensorflow as tf
+from tensorflow.python import python_io as tfpio
 import logging
 tf.get_logger().setLevel(logging.ERROR)
 
@@ -29,7 +29,7 @@ def _load_train_data(dataset_location):
 
 def _load_data(dataset_location):
     path_to_shards = glob.glob(os.path.join(dataset_location, 'shard_*.tfrecord'))
-    dataset = tf.python.python_io.tf_record_iterator(path_to_shards)[:1000]
+    dataset = tfpio.tf_record_iterator(path_to_shards)[:1000]
     print(len(dataset))
     return dataset.map(_deserialize_example)
 

@@ -29,7 +29,7 @@ def _load_train_data(dataset_location):
 
 def _load_data(dataset_location):
     path_to_shards = glob.glob(os.path.join(dataset_location, 'shard_*.tfrecord'))
-    dataset = tf.data.TFRecordDataset(path_to_shards)
+    dataset = tf.data.TFRecordDataset([path_to_shards[0]])
     print(len(dataset))
     return dataset.map(_deserialize_example)
 

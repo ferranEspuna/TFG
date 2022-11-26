@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
         t0 = time.time()
         try:
-            print()
+            print('no he hecho nada de nada')
             run_experiments_once(activation_generator=google_example_generator, max_dimension=MAX_DIM_NEEDED,
                                  distances=get_all_distances_no_param_experiment(alphas, thresholds),
                                  summaries=get_all_summaries(),

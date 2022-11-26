@@ -3,13 +3,24 @@ import os
 
 import tensorflow as tf
 import logging
+import tracemalloc
+tracemalloc.start()
 tf.get_logger().setLevel(logging.ERROR)
 
 
 def load_google_dataset(dataset_location):
+    print('empezamos load')
+    tracemalloc.start()
+    print(tracemalloc.get_traced_memory())
     absolute_dataset_path = os.path.abspath(dataset_location)
+    print(tracemalloc.get_traced_memory())
+    print('path creado')
     train_dataset = _load_train_data(absolute_dataset_path)
+    print(tracemalloc.get_traced_memory())
+    print('train')
     test_dataset = _load_test_data(absolute_dataset_path)
+    print(tracemalloc.get_traced_memory())
+    print('test')
     return train_dataset, test_dataset
 
 

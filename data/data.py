@@ -142,16 +142,14 @@ def get_google_examples(nExamples: int, nNeurons: int,
                         skip_reduction: bool = True
                         ) -> Generator[Tuple[Callable[[], Tuple[np.ndarray, np.ndarray]], str], None, None]:
     t0 = time.time()
-    print("3333")
+
     # build matrix with some examples
     dataset_location = FOLDER_TEMPLATE_TASK_1.format('dataset_1')
-    print("1111")
     train_dataset, test_dataset = load_google_dataset(dataset_location)
-    print("222")
 
     x_train, y_train = get_x_y_as_matrix(train_dataset, nExamples)
     x_test, y_test = get_x_y_as_matrix(test_dataset, nExamples)
-    print("6666")
+
     t1 = time.time()
     print('Loaded {} examples in {:.2f}s'.format(x_train.shape, t1 - t0))
 
@@ -160,13 +158,12 @@ def get_google_examples(nExamples: int, nNeurons: int,
         dirname = 'model_' + str(i)
         model_location = FOLDER_TEMPLATE_TASK_1.format(dirname)
         config_path = os.path.join(model_location, 'config.json')
-        print("27888822")
+
         if os.path.isdir(model_location):
 
             for trained in [True]:
 
                 if trained:
-                    print("lsfhgohgwkjwlk")
                     weights_path = os.path.join(model_location, 'weights.hdf5')
                 else:
                     weights_path = os.path.join(model_location, 'weights_init.hdf5')

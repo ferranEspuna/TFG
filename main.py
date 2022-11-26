@@ -7,8 +7,8 @@ import time
 
 alphas = [None, 10]
 thresholds = [0.001, 0.5, 0.8]
-nNeurons = 10
-nExamples = 20
+nNeurons = 3
+nExamples = 3
 google_example_generator = get_google_examples(nExamples, nNeurons,
                                                sample_neurons_strategy=largest_avg_activation_indices,
                                                skip_reduction=True)

@@ -15,8 +15,14 @@ def _deserialize_example(serialized_example):
     return inputs, output
 
 
+print(1)
 loc = "./data/Google/public_data/input_data/task1_v4/dataset_1/train"
+print(2)
 abs_loc = os.path.abspath(loc)
+print(3)
 path_to_shards = glob.glob(os.path.join(abs_loc, 'shard_*.tfrecord'))
+print(4)
 dataset = tf.data.TFRecordDataset(path_to_shards)
+print(5)
 deserialized_dataset = dataset.map(_deserialize_example)
+print(6)

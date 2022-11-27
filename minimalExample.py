@@ -4,7 +4,7 @@
 import numpy as np
 
 print('not allocated')
-ar = np.zeros((1024, 1024, 1024, 10), dtype=int)
+ar = np.zeros((1024, 1024, 1024, 50), dtype=int)
 print('allocated')
 
 """

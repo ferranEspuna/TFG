@@ -11,8 +11,6 @@ from textwrap import wrap
 from adapters import ripser_plusplus, ripser_normal
 
 adapter = ripser_plusplus
-SAVE_PATH_DEFAULT = "./results/Google/task1"
-
 
 # deterministic setup for an experiment
 class ExperimentResult:
@@ -131,7 +129,7 @@ def run_experiments_once(
         activation_generator: Generator[Tuple[Callable[[], Tuple[np.ndarray, np.ndarray]], str], None, None],
         max_dimension: int, distances: List[Distance],
         summaries: Optional[List[Callable]] = None,
-        save: Optional[bool] = False, save_path: str = SAVE_PATH_DEFAULT
+        save: Optional[bool] = False, save_path: str = ""
 ) -> None:
     activation_callable, name = activation_generator.__next__()
     if save:

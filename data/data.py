@@ -146,7 +146,7 @@ def get_google_examples(nExamples: int, nNeurons: int,
     # build matrix with some examples
     dataset_location = FOLDER_TEMPLATE_TASK_1.format('dataset_1')
     train_dataset, test_dataset = load_google_dataset(dataset_location)
-
+    print('load')
     x_train, y_train = get_x_y_as_matrix(train_dataset, nExamples)
     x_test, y_test = get_x_y_as_matrix(test_dataset, nExamples)
 

@@ -153,6 +153,8 @@ def get_google_examples(nExamples: int, nNeurons: int,
     t1 = time.time()
     print('Loaded {} examples in {:.2f}s'.format(x_train.shape, t1 - t0))
 
+    """
+
     for i in range(800):
 
         dirname = 'model_' + str(i)
@@ -176,3 +178,5 @@ def get_google_examples(nExamples: int, nNeurons: int,
                                                             skip_reduction_layers=skip_reduction)
 
                 yield calc_acts, dirname + '_' + str(trained)
+                
+    """

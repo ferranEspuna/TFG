@@ -3,7 +3,7 @@
 #import tensorflow as tf
 import numpy as np
 
-
+print('not allocated')
 ar = np.zeros((100, 1000), dtype=int)
 print('allocated')
 

@@ -7,13 +7,13 @@ import time
 
 alphas = [None, 10]
 thresholds = [0.001, 0.5, 0.8]
-nNeurons = 1500
-nExamples = 2500
+nNeurons = 3000
+nExamples = 2000
 google_example_generator = get_google_examples(nExamples, nNeurons,
                                                sample_neurons_strategy=largest_avg_activation_indices,
                                                skip_reduction=True)
 
-SAVE_PATH = "./results/Google/task1"
+SAVE_PATH = "./results/Google/task1_dim_0"
 
 if __name__ == '__main__':
 

@@ -8,9 +8,9 @@ from typing import List, Optional, Callable, Tuple, Generator
 from distances import Distance
 from seaborn import displot
 from textwrap import wrap
-from adapters import ripser_plusplus, ripser_normal
+from adapters import ripser_normal
 
-adapter = ripser_plusplus
+adapter = ripser_normal
 
 # deterministic setup for an experiment
 class ExperimentResult:
@@ -102,9 +102,10 @@ class Experiment:
         t0 = time.time()
         diags_train = adapter(d_train, self.maxdim)
         diags_test = adapter(d_test, self.maxdim)
-        self.result = ExperimentResult(name=self.name, diagrams_train=diags_train, diagrams_test=diags_test)
         t1 = time.time()
         print('computed diagrams in {:.2f}s'.format(t1 - t0))
+
+        self.result = ExperimentResult(name=self.name, diagrams_train=diags_train, diagrams_test=diags_test)
 
         if save:
             t0 = time.time()

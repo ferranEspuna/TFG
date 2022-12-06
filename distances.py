@@ -50,6 +50,15 @@ def pearson_distance(M: np.ndarray) -> np.ndarray:
     return d
 
 
+def pearson_distance_noabs(M: np.ndarray) -> np.ndarray:
+    d = np.sqrt(1 - np.corrcoef(M))
+    np.nan_to_num(d, nan=0.0, copy=False)
+    np.fill_diagonal(d, 0)
+    d = np.maximum(d, d.T)
+    assert d.shape == (M.shape[0], M.shape[0])
+    return d
+
+
 # regular old euclidean distance in Rn
 def euclidean_distance(M: np.ndarray) -> np.ndarray:
     d = np.linalg.norm(M[None, :, :] - M[:, None, :], axis=2) / M.shape[1]
@@ -59,6 +68,15 @@ def euclidean_distance(M: np.ndarray) -> np.ndarray:
 
 def spearman_distance(M: np.ndarray) -> np.ndarray:
     d = np.sqrt(1 - spearmanr(M.T)[0] ** 2)
+    np.nan_to_num(d, nan=0.0, copy=False)
+    np.fill_diagonal(d, 0)
+    d = np.maximum(d, d.T)
+    assert d.shape == (M.shape[0], M.shape[0])
+    return d
+
+
+def spearman_distance_noabs(M: np.ndarray) -> np.ndarray:
+    d = np.sqrt(1 - spearmanr(M.T)[0])
     np.nan_to_num(d, nan=0.0, copy=False)
     np.fill_diagonal(d, 0)
     d = np.maximum(d, d.T)
@@ -89,7 +107,6 @@ def soft_jaccard_distance_activations(M: np.ndarray, threshold: float = 0, alpha
 def generalized_jaccard_distance_normalized_activations(M: np.ndarray,
                                                         threshold: float = 0,
                                                         alpha: Optional[float] = None) -> np.ndarray:
-
     return generalized_jaccard_distance(soft_step(M / np.max(M, axis=1)[:, None] - threshold, alpha=alpha))
 
 
@@ -151,7 +168,38 @@ def get_all_distances_no_param_experiment(alphas: List[Optional[float]], thresho
                       Distance(generalized_jaccard_distance, 'GJD'),
                       Distance(generalized_jaccard_distance_normalized, 'GJD on Normalized activations')]
 
-    dists_alpha_threshold = [Distance(generalized_jaccard_distance_normalized_activations, 'GJD on Binary Normalized Activations')]
+    dists_alpha_threshold = [
+        Distance(generalized_jaccard_distance_normalized_activations, 'GJD on Binary Normalized Activations')]
+
+    for d in dists_alpha_threshold:
+        for t in thresholds:
+            for a in alphas:
+
+                name = d.name
+
+                if a is not None:
+                    name = 'Soft ' + name + ', alpha = ' + str(a)
+                if t is not None:
+                    name = name + ', threshold = ' + str(t)
+
+                d2fun = functools.partial(d.fun, alpha=a, threshold=t)
+                dists_no_param.append(Distance(d2fun, name))
+
+    return dists_no_param
+
+
+def get_all_distances_no_param_no_abs_experiment() -> List[Distance]:
+    dists_no_param = [Distance(pearson_distance_noabs, 'Pearson Distance no abs'),
+                      Distance(spearman_distance_noabs, 'Spearman Distance no abs'), ]
+
+    return dists_no_param
+
+
+def get_all_gjd_no_param_experiment(alphas: List[Optional[float]], thresholds: List[float]) -> List[Distance]:
+    dists_no_param = []
+
+    dists_alpha_threshold = [
+        Distance(generalized_jaccard_distance_normalized_activations, 'GJD on Binary Normalized Activations')]
 
     for d in dists_alpha_threshold:
         for t in thresholds:

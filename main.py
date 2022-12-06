@@ -1,19 +1,19 @@
 from data.data import get_google_examples
 from experiment import run_experiments_once
-from distances import get_all_distances_no_param_experiment
+from distances import get_all_distances_no_param_experiment, get_all_distances_no_param_no_abs_experiment, get_all_gjd_no_param_experiment
 from summaries import get_all_summaries, MAX_DIM_NEEDED
 from sampling import largest_avg_activation_indices
 import time
 
-alphas = [None, 10]
-thresholds = [0.001, 0.5, 0.8]
+alphas = [None, 10, 50]
+thresholds = [0.1, 0.6, 0.4, 0.9]
 nNeurons = 1500
-nExamples = 2000
+nExamples = 1000
 google_example_generator = get_google_examples(nExamples, nNeurons,
                                                sample_neurons_strategy=largest_avg_activation_indices,
                                                skip_reduction=True)
 
-SAVE_PATH = "./results/Google/task1_dim_0"
+SAVE_PATH = "./results/Google/task1_dim_0_more"
 
 if __name__ == '__main__':
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
         t0 = time.time()
         try:
             run_experiments_once(activation_generator=google_example_generator, max_dimension=MAX_DIM_NEEDED,
-                                 distances=get_all_distances_no_param_experiment(alphas, thresholds),
+                                 distances=get_all_gjd_no_param_experiment(alphas, thresholds),
                                  summaries=get_all_summaries(),
                                  save=True, save_path=SAVE_PATH)
             t1 = time.time()

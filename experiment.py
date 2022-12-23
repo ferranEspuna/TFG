@@ -12,13 +12,12 @@ from adapters import ripser_normal
 
 adapter = ripser_normal
 
+
 # deterministic setup for an experiment
 class ExperimentResult:
 
-    def __init__(self, diagrams_train: List[np.ndarray], diagrams_test: List[np.ndarray],
-                 name: str = 'ExperimentResult') -> None:
+    def __init__(self, diagrams_train: List[np.ndarray], name: str = 'ExperimentResult') -> None:
         self.diagrams_train = diagrams_train
-        self.diagrams_test = diagrams_test
         self.save_dir = None
         self.name = name
 
@@ -68,18 +67,13 @@ class ExperimentResult:
     def save(self, result_path: str = "./results/Google/task1"):
         self.get_save_dir(result_path)
         self.save_diag(self.diagrams_train, self.name, result_path, 'Train')
-        self.save_diag(self.diagrams_test, self.name, result_path, 'Test')
 
 
 class Experiment:
-    def __init__(self, sample_train: np.ndarray, sample_test: np.ndarray, dist: Distance, name: Optional[str],
-                 maxdim: int,
-                 summaries: Optional[Tuple[Callable[[List[np.ndarray]], float]]] = ()) -> None:
+    def __init__(self, sample_train: np.ndarray, dist: Distance, name: Optional[str], maxdim: int) -> None:
 
         self.sample_train: np.ndarray = sample_train
-        self.sample_test = sample_test
         self.dist: Distance = dist
-        self.summaries = summaries
         self.maxdim: int = maxdim
         self.result: Optional[ExperimentResult] = None
 
@@ -95,17 +89,15 @@ class Experiment:
         t0 = time.time()
         # distance matrix of sample
         d_train = self.dist.fun(self.sample_train)
-        d_test = self.dist.fun(self.sample_test)
         t1 = time.time()
         print('computed distances in {:.2f}s'.format(t1 - t0))
 
         t0 = time.time()
         diags_train = adapter(d_train, self.maxdim)
-        diags_test = adapter(d_test, self.maxdim)
         t1 = time.time()
         print('computed diagrams in {:.2f}s'.format(t1 - t0))
 
-        self.result = ExperimentResult(name=self.name, diagrams_train=diags_train, diagrams_test=diags_test)
+        self.result = ExperimentResult(name=self.name, diagrams_train=diags_train)
 
         if save:
             t0 = time.time()
@@ -117,19 +109,13 @@ class Experiment:
             plt.savefig(save_path + '/distances_train')
             plt.clf()
 
-            plt.imshow(d_test)
-            plt.title(self.dist.name + '. Test Dataset', wrap=True)
-            plt.savefig(save_path + '/distances_test')
-            plt.clf()
-
             t1 = time.time()
             print('saved data in {:.2f}s'.format(t1 - t0))
 
 
 def run_experiments_once(
-        activation_generator: Generator[Tuple[Callable[[], Tuple[np.ndarray, np.ndarray]], str], None, None],
+        activation_generator: Generator[Tuple[Callable[[], np.ndarray], str], None, None],
         max_dimension: int, distances: List[Distance],
-        summaries: Optional[List[Callable]] = None,
         save: Optional[bool] = False, save_path: str = ""
 ) -> None:
     activation_callable, name = activation_generator.__next__()
@@ -143,13 +129,13 @@ def run_experiments_once(
         os.mkdir(general_dir)
 
     print(name)
-    sample_matrix_train, sample_matrix_test = activation_callable()
+    sample_matrix_train = activation_callable()
 
     for dist in distances:
 
-        e = Experiment(sample_matrix_train, sample_matrix_test, dist,
+        e = Experiment(sample_matrix_train, dist,
                        name=name + ': ' + dist.name,
-                       maxdim=max_dimension, summaries=summaries)
+                       maxdim=max_dimension)
 
         print("\n" + e.name)
         try:

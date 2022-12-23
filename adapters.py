@@ -9,5 +9,6 @@ def ripser_plusplus(M, upper_dim):
     return dgs_formatted
 """
 
+
 def ripser_normal(M, upper_dim):
     return ripser(M, maxdim=upper_dim, thresh=1, distance_matrix=True)['dgms']

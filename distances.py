@@ -217,8 +217,7 @@ def get_all_distances_no_param_experiment(thresholds: List[float]) -> List[Dista
                       Distance(spearman_distance, 'Spearman Distance')]
 
     dists_threshold = [
-        Distance(fast_jaccard_distance_normalized_activations, 'Jaccard Distance on Binary Normalized Activations'),
-        Distance(intersection_distance, 'Intersection Distance on Binary Normalized Activations')]
+        Distance(fast_jaccard_distance_normalized_activations, 'Jaccard Distance on Binary Normalized Activations')]
 
     for d in dists_threshold:
         for t in thresholds:

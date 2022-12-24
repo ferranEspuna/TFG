@@ -21,20 +21,24 @@ if __name__ == '__main__':
     if not os.path.isdir(SAVE_PATH):
         os.mkdir(SAVE_PATH)
 
-    for epoch in range(20):
+    for epoch in range(2, 20):
 
-        savepath_shard = os.path.join(SAVE_PATH, f'epoch_{epoch}')
+        try:
 
-        for i in range(200):
+            savepath_shard = os.path.join(SAVE_PATH, f'epoch_{epoch}')
 
-            t0 = time.time()
-            try:
+            for _ in range(96):
 
-                run_experiments_once(activation_generator=google_example_generator, max_dimension=MAX_DIM_NEEDED,
-                                     distances=get_all_distances_no_param_experiment(thresholds),
-                                     save=True, save_path=savepath_shard)
-                t1 = time.time()
-                print('Computed all in {:.2f}s'.format(t1 - t0))
+                t0 = time.time()
+                try:
 
-            except AssertionError:
-                pass
+                    run_experiments_once(activation_generator=google_example_generator, max_dimension=MAX_DIM_NEEDED,
+                                         distances=get_all_distances_no_param_experiment(thresholds),
+                                         save=True, save_path=savepath_shard)
+                    t1 = time.time()
+                    print('Computed all in {:.2f}s'.format(t1 - t0))
+
+                except AssertionError:
+                    pass
+        except:
+            pass

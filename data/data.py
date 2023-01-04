@@ -9,7 +9,10 @@ from tensorflow.python.keras import Sequential
 from tensorflow.python.layers.base import Layer
 from data.GoogleDatasetReader import load_google_dataset, load_google_train_dataset
 
-FOLDER_TEMPLATE_TASK_1 = "./Google/public_data/input_data/task1_v4/{}"
+FOLDER_TEMPLATE = "./Google/all_data/{}/{}/{}"
+TASK_NAMES = ['task1_v4', 'task2_v1', 'task6', 'task7', 'task8', 'task9']
+#TASK_NAMES = ['task2_v1']
+
 BATCH_SIZE = 500
 
 
@@ -200,14 +203,14 @@ def get_x_y_as_matrix(dataset, nExamples):
     return x_train, y_train
 
 
-def get_google_examples_train(nExamples: int, nNeurons: int,
+def get_google_examples_train(nExamples: int, nNeurons: int, task_name: str,
                               sample_neurons_strategy: Callable[[np.ndarray, np.ndarray, int], np.ndarray],
                               skip_reduction: bool = True
                               ) -> Generator[Tuple[Callable[[], np.ndarray], str], None, None]:
     t0 = time.time()
 
     # build matrix with some examples
-    dataset_location = FOLDER_TEMPLATE_TASK_1.format('dataset_1')
+    dataset_location = FOLDER_TEMPLATE.format('input_data', task_name, 'dataset_1')
     print(dataset_location)
     train_dataset = load_google_train_dataset(dataset_location)
     print('load')
@@ -217,10 +220,10 @@ def get_google_examples_train(nExamples: int, nNeurons: int,
     t1 = time.time()
     print('Loaded {} examples in {:.2f}s'.format(x_train.shape, t1 - t0))
 
-    for i in range(800):
+    for i in range(2000):
 
         dirname = 'model_' + str(i)
-        model_location = FOLDER_TEMPLATE_TASK_1.format(dirname)
+        model_location = FOLDER_TEMPLATE.format('input_data', task_name, dirname)
         config_path = os.path.join(model_location, 'config.json')
 
         if os.path.isdir(model_location):
@@ -242,6 +245,7 @@ def get_google_examples_train(nExamples: int, nNeurons: int,
                 yield calc_acts, dirname + '_' + str(trained)
 
 
+"""
 def get_google_examples(nExamples: int, nNeurons: int,
                         sample_neurons_strategy: Callable[[np.ndarray, np.ndarray, int], np.ndarray],
                         skip_reduction: bool = True
@@ -282,3 +286,5 @@ def get_google_examples(nExamples: int, nNeurons: int,
                                                             skip_reduction_layers=skip_reduction)
 
                 yield calc_acts, dirname + '_' + str(trained)
+
+    """

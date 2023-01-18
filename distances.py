@@ -214,7 +214,7 @@ def get_all_distances_no_param(alphas: List[Optional[float]], thresholds: List[f
 
 def get_all_distances_no_param_experiment(thresholds: List[float]) -> List[Distance]:
     dists_no_param = [Distance(pearson_distance, 'Pearson Distance'),
-                      Distance(spearman_distance, 'Spearman Distance')]
+    Distance(spearman_distance, 'Spearman Distance')]
 
     dists_threshold = [
         Distance(fast_jaccard_distance_normalized_activations, 'Jaccard Distance on Binary Normalized Activations')]
@@ -237,24 +237,21 @@ def get_all_distances_no_param_no_abs_experiment() -> List[Distance]:
     return dists_no_param
 
 
-def get_all_gjd_no_param_experiment(alphas: List[Optional[float]], thresholds: List[float]) -> List[Distance]:
+def get_all_gjd_no_param_experiment(thresholds: List[float]) -> List[Distance]:
     dists_no_param = []
 
-    dists_alpha_threshold = [
-        Distance(generalized_jaccard_distance_normalized_activations, 'GJD on Binary Normalized Activations')]
+    dists_threshold = [
+        Distance(fast_jaccard_distance_normalized_activations, 'Jaccard Distance on Binary Normalized Activations')]
 
-    for d in dists_alpha_threshold:
+    for d in dists_threshold:
         for t in thresholds:
-            for a in alphas:
 
                 name = d.name
 
-                if a is not None:
-                    name = 'Soft ' + name + ', alpha = ' + str(a)
                 if t is not None:
                     name = name + ', threshold = ' + str(t)
 
-                d2fun = functools.partial(d.fun, alpha=a, threshold=t)
+                d2fun = functools.partial(d.fun, threshold=t)
                 dists_no_param.append(Distance(d2fun, name))
 
     return dists_no_param

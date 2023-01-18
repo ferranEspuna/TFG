@@ -10,8 +10,7 @@ from tensorflow.python.layers.base import Layer
 from data.GoogleDatasetReader import load_google_dataset, load_google_train_dataset
 
 FOLDER_TEMPLATE = "./Google/all_data/{}/{}/{}"
-TASK_NAMES = ['task1_v4', 'task2_v1', 'task6', 'task7', 'task8', 'task9']
-#TASK_NAMES = ['task2_v1']
+TASK_NAMES = ['task4', 'task5'] #['task1_v4', 'task2_v1', 'task6', 'task7', 'task8', 'task9']
 
 BATCH_SIZE = 500
 

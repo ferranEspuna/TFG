@@ -4,7 +4,7 @@ from data.data import get_google_examples_train, TASK_NAMES
 from experiment import run_experiments_once
 from distances import get_all_distances_no_param_experiment
 from summaries import MAX_DIM_NEEDED
-from sampling import largest_avg_activation_indices
+from sampling import largest_avg_activation_indices, random_indices
 import time
 
 thresholds = [0.5]
